@@ -45,7 +45,7 @@
       "name": "新しい検索セット",
       "short_name": "新規作成",
       "description": "新しい検索ワードセットを作成",
-      "url": "/XSA/",
+      "url": "./",
       "icons": [
         {
           "src": "icon-192.png",
