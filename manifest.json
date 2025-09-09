@@ -1,0 +1,59 @@
+{
+  "name": "XSA - X Search Assistant",
+  "short_name": "XSA",
+  "description": "複数キーワードを効率的にX(Twitter)検索できるPWAアプリケーション",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "ja",
+  "categories": ["productivity", "utilities", "social"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "XSAのモバイル版メイン画面"
+    },
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "XSAのデスクトップ版メイン画面"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "新しい検索セット",
+      "short_name": "新規作成",
+      "description": "新しい検索ワードセットを作成",
+      "url": "/",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

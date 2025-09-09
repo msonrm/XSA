@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ページが見つかりません - XSA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 500px;
+        }
+        
+        .error-code {
+            font-size: 120px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            opacity: 0.8;
+            letter-spacing: -4px;
+        }
+        
+        .error-title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: -0.8px;
+        }
+        
+        .error-message {
+            font-size: 18px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        .home-button {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-size: 17px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .home-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .home-button:active {
+            transform: translateY(0);
+        }
+        
+        .magnifying-glass {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .magnifying-glass {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @media (max-width: 480px) {
+            .error-code {
+                font-size: 80px;
+            }
+            
+            .error-title {
+                font-size: 24px;
+            }
+            
+            .error-message {
+                font-size: 16px;
+            }
+            
+            .magnifying-glass {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="magnifying-glass">🔍</div>
+        <div class="error-code">404</div>
+        <h1 class="error-title">ページが見つかりません</h1>
+        <p class="error-message">
+            お探しのページは存在しないか、移動された可能性があります。<br>
+            ホームページに戻って、検索を続けましょう。
+        </p>
+        <a href="/" class="home-button">🏠 ホームに戻る</a>
+    </div>
+    
+    <script>
+        // 3秒後に自動的にホームページにリダイレクト（オプション）
+        // setTimeout(() => {
+        //     window.location.href = '/';
+        // }, 3000);
+    </script>
+</body>
+</html>
