@@ -175,6 +175,19 @@
             color: #8e8e93;
         }
         
+        .input-counter {
+            font-size: 13px;
+            color: #8e8e93;
+            margin-top: 8px;
+            text-align: right;
+            font-family: 'SF Mono', 'Monaco', monospace;
+        }
+        
+        .input-counter.over-limit {
+            color: #ff3b30;
+            font-weight: 600;
+        }
+        
         .button {
             background: #007aff;
             color: white;
@@ -520,12 +533,14 @@
             
             <div class="input-group">
                 <label>🔑 検索キーワード（改行で区切る）</label>
-                <textarea id="keywords" rows="5" placeholder="ミルハウザー&#10;カルヴィーノ&#10;ピンチョン&#10;プルースト"></textarea>
+                <textarea id="keywords" rows="5" placeholder="ミルハウザー&#10;カルヴィーノ&#10;ピンチョン&#10;プルースト" oninput="updateCounter('keywords', 'keywordsCounter')"></textarea>
+                <div class="input-counter" id="keywordsCounter">0行 | 0文字</div>
             </div>
             
             <div class="input-group">
                 <label>🚫 除外キーワード（改行で区切る）</label>
-                <textarea id="excludeKeywords" rows="3" placeholder="ジョセフ&#10;銀青"></textarea>
+                <textarea id="excludeKeywords" rows="3" placeholder="ジョセフ&#10;銀青" oninput="updateCounter('excludeKeywords', 'excludeKeywordsCounter')"></textarea>
+                <div class="input-counter" id="excludeKeywordsCounter">0行 | 0文字</div>
             </div>
             
             <button class="button" onclick="testSearch()">🔍 検索してみる</button>
@@ -712,6 +727,36 @@
             document.getElementById('manualUpdate').style.display = 'none';
         }
         
+        function updateCounter(textareaId, counterId) {
+            const textarea = document.getElementById(textareaId);
+            const counter = document.getElementById(counterId);
+            const text = textarea.value;
+            
+            // 文字数カウント
+            const charCount = text.length;
+            
+            // 行数カウント（空文字の場合は0行、それ以外は改行数+1）
+            const lineCount = text === '' ? 0 : text.split('\n').length;
+            
+            // 非空行数もカウント（参考情報として）
+            const nonEmptyLines = text === '' ? 0 : text.split('\n').filter(line => line.trim() !== '').length;
+            
+            // カウンター表示更新
+            counter.textContent = `${lineCount}行 | ${charCount}文字`;
+            
+            // 制限超過時の警告表示（任意：長すぎる場合）
+            if (charCount > 1000 || lineCount > 50) {
+                counter.className = 'input-counter over-limit';
+            } else {
+                counter.className = 'input-counter';
+            }
+            
+            // 非空行数が多い場合の追加情報
+            if (lineCount > 0 && nonEmptyLines !== lineCount) {
+                counter.textContent += ` (有効: ${nonEmptyLines}行)`;
+            }
+        }
+        
         function showStatus(message, className = '') {
             const indicator = document.getElementById('statusIndicator');
             indicator.textContent = message;
@@ -803,6 +848,11 @@
                 document.getElementById('setName').value = set.name;
                 document.getElementById('keywords').value = set.keywords.join('\n');
                 document.getElementById('excludeKeywords').value = set.excludeKeywords.join('\n');
+                
+                // カウンターを更新
+                updateCounter('keywords', 'keywordsCounter');
+                updateCounter('excludeKeywords', 'excludeKeywordsCounter');
+                
                 window.scrollTo(0, 0);
             }
         }
@@ -935,6 +985,11 @@
                         document.getElementById('setName').value = data.n;
                         document.getElementById('keywords').value = data.k.join('\n');
                         document.getElementById('excludeKeywords').value = (data.e || []).join('\n');
+                        
+                        // カウンターを更新
+                        updateCounter('keywords', 'keywordsCounter');
+                        updateCounter('excludeKeywords', 'excludeKeywordsCounter');
+                        
                         history.replaceState(null, '', location.pathname);
                         alert('インポート完了！');
                     }
@@ -945,6 +1000,10 @@
             
             // 保存済みセットを読み込み
             loadSavedSets();
+            
+            // カウンターを初期化
+            updateCounter('keywords', 'keywordsCounter');
+            updateCounter('excludeKeywords', 'excludeKeywordsCounter');
             
             // インストールプロンプトの表示判定
             const dismissed = localStorage.getItem('installDismissed');
