@@ -1,4 +1,4 @@
-const CACHE_NAME = 'xsa-v2.6.0';
+const CACHE_NAME = 'xsa-v2.7.0';
 const urlsToCache = [
   './',
   './index.html',
