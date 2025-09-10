@@ -104,7 +104,7 @@ self.addEventListener('message', (event) => {
 // バックグラウンド同期（オプション）
 self.addEventListener('sync', (event) => {
   if (event.tag === 'background-sync') {
-    console.log('Service Worker: Background sync v2.0.0');
+    console.log('Service Worker: Background sync v2.1.0');
     // バックグラウンドでの同期処理をここに追加
   }
 });
