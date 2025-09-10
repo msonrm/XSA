@@ -14,9 +14,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     
     <!-- アイコン設定 -->
-    <link rel="apple-touch-icon" sizes="180x180" href="./icon-192.PNG">
-    <link rel="icon" type="image/png" sizes="32x32" href="./icon-192.PNG">
-    <link rel="icon" type="image/png" sizes="16x16" href="./icon-192.PNG">
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./icon-192.png">
     
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
@@ -277,6 +277,14 @@
         .mini-button:active {
             transform: scale(0.95);
             background: #0056b3;
+        }
+        
+        .mini-button.delete {
+            background: #ff3b30;
+        }
+        
+        .mini-button.delete:active {
+            background: #d70015;
         }
         
         .status-indicator {
@@ -625,8 +633,9 @@
                         </div>
                     </div>
                     <div>
-                        <button class="mini-button" onclick="loadSet(${set.id})">読込</button>
-                        <button class="mini-button" onclick="searchWithSet(${set.id})">検索</button>
+                        <button class="mini-button" onclick="loadSet(${set.id})">📝 読込</button>
+                        <button class="mini-button" onclick="searchWithSet(${set.id})">🔍 検索</button>
+                        <button class="mini-button delete" onclick="deleteSet(${set.id})">🗑️ 削除</button>
                     </div>
                 </div>
             `).join('');
