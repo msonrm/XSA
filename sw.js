@@ -1,17 +1,17 @@
-const CACHE_NAME = 'xsa-v1.0.0';
+const CACHE_NAME = 'xsa-v2.0.0';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
   'https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js',
   'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'
 ];
 
 // インストール時の処理
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Install');
+  console.log('Service Worker: Install v2.0.0');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -27,7 +27,7 @@ self.addEventListener('install', (event) => {
 
 // アクティベート時の処理
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activate');
+  console.log('Service Worker: Activate v2.0.0');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -53,11 +53,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // CDNのリソースは直接フェッチ
+  if (event.request.url.includes('cdn.jsdelivr.net')) {
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
         // キャッシュがあればそれを返す
         if (response) {
+          console.log('Service Worker: Serving from cache', event.request.url);
           return response;
         }
         
@@ -72,6 +78,7 @@ self.addEventListener('fetch', (event) => {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME)
             .then((cache) => {
+              console.log('Service Worker: Caching new resource', event.request.url);
               cache.put(event.request, responseToCache);
             });
           
@@ -79,7 +86,8 @@ self.addEventListener('fetch', (event) => {
         }).catch(() => {
           // オフライン時のフォールバック
           if (event.request.destination === 'document') {
-            return caches.match('/');
+            console.log('Service Worker: Fallback to offline page');
+            return caches.match('./');
           }
         });
       })
@@ -96,7 +104,7 @@ self.addEventListener('message', (event) => {
 // バックグラウンド同期（オプション）
 self.addEventListener('sync', (event) => {
   if (event.tag === 'background-sync') {
-    console.log('Service Worker: Background sync');
+    console.log('Service Worker: Background sync v2.0.0');
     // バックグラウンドでの同期処理をここに追加
   }
 });
@@ -107,8 +115,8 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: event.data ? event.data.text() : 'XSAからの通知',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: './icon-192.png',
+    badge: './icon-192.png',
     tag: 'xsa-notification',
     requireInteraction: true,
     actions: [
