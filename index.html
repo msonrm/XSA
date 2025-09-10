@@ -88,6 +88,45 @@
             cursor: pointer;
         }
         
+        .manual-update {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            color: #1c1c1e;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .manual-update h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ff3b30;
+        }
+        
+        .manual-update p {
+            font-size: 14px;
+            color: #8e8e93;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        
+        .manual-update button {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 0 4px;
+        }
+        
         .card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -174,6 +213,36 @@
         
         .result-section {
             display: none;
+            position: relative;
+        }
+        
+        .close-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(142, 142, 147, 0.12);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #8e8e93;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .close-button:hover {
+            background: rgba(142, 142, 147, 0.2);
+            color: #1c1c1e;
+        }
+        
+        .close-button:active {
+            transform: scale(0.95);
+            background: rgba(142, 142, 147, 0.3);
         }
         
         .qr-container {
@@ -367,7 +436,8 @@
             .card,
             .saved-sets,
             .install-prompt,
-            .grouped-list {
+            .grouped-list,
+            .manual-update {
                 background: rgba(28, 28, 30, 0.95);
                 border-color: rgba(255, 255, 255, 0.1);
             }
@@ -400,6 +470,15 @@
             .list-item:active {
                 background: rgba(255, 255, 255, 0.1);
             }
+            
+            .close-button:hover {
+                background: rgba(255, 255, 255, 0.15);
+                color: #ffffff;
+            }
+            
+            .close-button:active {
+                background: rgba(255, 255, 255, 0.25);
+            }
         }
     </style>
 </head>
@@ -415,6 +494,13 @@
                 <span>📱 ホーム画面に追加しますか？</span>
                 <button onclick="installApp()">追加</button>
                 <button onclick="dismissInstall()" style="background: #6c757d; margin-left: 10px;">後で</button>
+            </div>
+            
+            <div class="manual-update" id="manualUpdate">
+                <h4>🔄 更新が必要です</h4>
+                <p>自動更新が動作しない場合は、<br>手動でキャッシュをクリアしてください</p>
+                <button onclick="forceUpdate()">強制更新</button>
+                <button onclick="hideManualUpdate()" style="background: #8e8e93;">閉じる</button>
             </div>
         </div>
         
@@ -440,6 +526,7 @@
         </div>
         
         <div class="card result-section" id="resultSection">
+            <button class="close-button" onclick="closeResultSection()" title="閉じる">×</button>
             <h3 class="section-header">✨ 共有する</h3>
             
             <div class="qr-container">
@@ -548,16 +635,73 @@
         function showUpdateAvailable() {
             updateAvailable = true;
             showStatus('🔄 更新版が利用可能です（クリックで更新）', 'update-indicator');
+            
             document.getElementById('statusIndicator').onclick = () => {
+                // ボタンを押した時の視覚的フィードバック
+                showStatus('⏳ 更新中...', 'update-indicator');
+                
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.getRegistration().then(reg => {
                         if (reg && reg.waiting) {
+                            // 新しいService Workerに切り替え
                             reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                            window.location.reload();
+                            
+                            // 少し待ってからリロード
+                            setTimeout(() => {
+                                window.location.reload(true);
+                            }, 500);
+                        } else {
+                            // waiting状態でない場合は強制リロード
+                            console.log('No waiting service worker, force reload');
+                            setTimeout(() => {
+                                window.location.reload(true);
+                            }, 500);
                         }
+                    }).catch(error => {
+                        console.error('Service Worker update failed:', error);
+                        // エラー時は手動更新UIを表示
+                        document.getElementById('manualUpdate').style.display = 'block';
+                        hideStatus();
                     });
+                } else {
+                    // Service Worker未対応の場合は通常のリロード
+                    setTimeout(() => {
+                        window.location.reload(true);
+                    }, 500);
                 }
             };
+        }
+        
+        function forceUpdate() {
+            showStatus('🔄 強制更新中...', 'update-indicator');
+            
+            // Service Worker を完全にクリア
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                }).finally(() => {
+                    // キャッシュも削除
+                    if ('caches' in window) {
+                        caches.keys().then(names => {
+                            return Promise.all(names.map(name => caches.delete(name)));
+                        }).finally(() => {
+                            // 完全リロード
+                            window.location.reload(true);
+                        });
+                    } else {
+                        window.location.reload(true);
+                    }
+                });
+            } else {
+                // ページを強制リロード
+                window.location.href = window.location.href + '?t=' + Date.now();
+            }
+        }
+        
+        function hideManualUpdate() {
+            document.getElementById('manualUpdate').style.display = 'none';
         }
         
         function showStatus(message, className = '') {
@@ -759,6 +903,14 @@
                 document.body.removeChild(textArea);
                 alert('URLをコピーしました！');
             });
+        }
+        
+        function closeResultSection() {
+            document.getElementById('resultSection').style.display = 'none';
+            // QRコードをクリア（メモリ節約のため）
+            document.getElementById('qrcode').innerHTML = '';
+            document.getElementById('urlDisplay').textContent = '';
+            currentURL = '';
         }
         
         // インポート処理
