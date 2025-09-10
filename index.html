@@ -14,9 +14,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     
     <!-- アイコン設定 -->
-    <link rel="apple-touch-icon" sizes="180x180" href="./icon-192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="./icon-192.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="./icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-192.PNG">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icon-192.PNG">
+    <link rel="icon" type="image/png" sizes="16x16" href="./icon-192.PNG">
     
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
@@ -656,6 +656,31 @@
                 const query = excludeQuery ? `${includeQuery}+${excludeQuery}` : includeQuery;
                 
                 window.open(`https://x.com/search?q=${query}&src=typd&f=tweets&vertical=default`, '_blank');
+            }
+        }
+        
+        function deleteSet(id) {
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            const set = sets.find(s => s.id === id);
+            
+            if (!set) {
+                alert('削除対象の検索セットが見つかりません。');
+                return;
+            }
+            
+            // 確認ダイアログを表示
+            const confirmMessage = `「${set.name}」を削除してもよろしいですか？\n\n含まれるキーワード:\n${set.keywords.join(', ')}\n\nこの操作は取り消せません。`;
+            
+            if (confirm(confirmMessage)) {
+                // 削除実行
+                const updatedSets = sets.filter(s => s.id !== id);
+                localStorage.setItem('xsaSearchSets', JSON.stringify(updatedSets));
+                
+                // 成功メッセージ
+                alert('検索セットを削除しました。');
+                
+                // リストを再読み込み
+                loadSavedSets();
             }
         }
         
