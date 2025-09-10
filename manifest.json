@@ -2,7 +2,7 @@
   "name": "XSA - X Search Assistant",
   "short_name": "XSA",
   "description": "複数キーワードを効率的にX(Twitter)検索できるPWAアプリケーション",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#667eea",
