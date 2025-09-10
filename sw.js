@@ -1,4 +1,4 @@
-const CACHE_NAME = 'xsa-v2.4.0';
+const CACHE_NAME = 'xsa-v2.5.0';
 const urlsToCache = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const urlsToCache = [
 
 // インストール時の処理
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Install v2.2.0');
+  console.log('Service Worker: Install v2.5.0');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -27,7 +27,7 @@ self.addEventListener('install', (event) => {
 
 // アクティベート時の処理
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activate v2.2.0');
+  console.log('Service Worker: Activate v2.5.0');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -104,7 +104,7 @@ self.addEventListener('message', (event) => {
 // バックグラウンド同期（オプション）
 self.addEventListener('sync', (event) => {
   if (event.tag === 'background-sync') {
-    console.log('Service Worker: Background sync v2.2.0');
+    console.log('Service Worker: Background sync v2.5.0');
     // バックグラウンドでの同期処理をここに追加
   }
 });
