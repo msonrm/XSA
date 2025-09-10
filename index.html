@@ -1,150 +1,1017 @@
-const CACHE_NAME = 'xsa-v2.5.0';
-const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
-  'https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js',
-  'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'
-];
-
-// インストール時の処理
-self.addEventListener('install', (event) => {
-  console.log('Service Worker: Install v2.5.0');
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Service Worker: Caching files');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => {
-        // 新しいService Workerをすぐにアクティブにする
-        return self.skipWaiting();
-      })
-  );
-});
-
-// アクティベート時の処理
-self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activate v2.5.0');
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          // 古いキャッシュを削除
-          if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: Deleting old cache', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      // 全てのクライアントを制御下に置く
-      return self.clients.claim();
-    })
-  );
-});
-
-// フェッチ時の処理
-self.addEventListener('fetch', (event) => {
-  // X(Twitter)のURLは直接アクセスを許可
-  if (event.request.url.includes('x.com') || event.request.url.includes('twitter.com')) {
-    return;
-  }
-  
-  // CDNのリソースは直接フェッチ
-  if (event.request.url.includes('cdn.jsdelivr.net')) {
-    return;
-  }
-  
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // キャッシュがあればそれを返す
-        if (response) {
-          console.log('Service Worker: Serving from cache', event.request.url);
-          return response;
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSA - X Search Assistant</title>
+    
+    <!-- PWA設定 -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="XSA">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- アイコン設定 -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./icon-192.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        // ネットワークからフェッチ
-        return fetch(event.request).then((response) => {
-          // 有効なレスポンスでない場合はそのまま返す
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          
-          // レスポンスをクローンしてキャッシュに保存
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              console.log('Service Worker: Caching new resource', event.request.url);
-              cache.put(event.request, responseToCache);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: #f2f2f7;
+            min-height: 100vh;
+            padding: 0;
+            padding-top: max(env(safe-area-inset-top), 44px);
+            padding-bottom: max(env(safe-area-inset-bottom), 20px);
+            color: #1c1c1e;
+        }
+        
+        .container {
+            max-width: 428px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 20px 0;
+        }
+        
+        .header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            color: #1c1c1e;
+            margin-bottom: 8px;
+            letter-spacing: -0.8px;
+        }
+        
+        .header p {
+            font-size: 17px;
+            color: #8e8e93;
+            font-weight: 400;
+        }
+        
+        .install-prompt {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            color: #1c1c1e;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .install-prompt button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        
+        .manual-update {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            color: #1c1c1e;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .manual-update h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ff3b30;
+        }
+        
+        .manual-update p {
+            font-size: 14px;
+            color: #8e8e93;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        
+        .manual-update button {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 0 4px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-group {
+            margin-bottom: 24px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 17px;
+            color: #1c1c1e;
+        }
+        
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            background: #f2f2f7;
+            border-radius: 12px;
+            font-size: 17px;
+            color: #1c1c1e;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            resize: none;
+        }
+        
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            background: #e5e5ea;
+            transform: scale(1.01);
+        }
+        
+        .input-group input::placeholder,
+        .input-group textarea::placeholder {
+            color: #8e8e93;
+        }
+        
+        .input-counter {
+            font-size: 13px;
+            color: #8e8e93;
+            margin-top: 8px;
+            text-align: right;
+            font-family: 'SF Mono', 'Monaco', monospace;
+        }
+        
+        .input-counter.over-limit {
+            color: #ff3b30;
+            font-weight: 600;
+        }
+        
+        .button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 12px;
+            letter-spacing: -0.2px;
+        }
+        
+        .button:active {
+            transform: scale(0.98);
+            background: #0056b3;
+        }
+        
+        .button.secondary {
+            background: #8e8e93;
+        }
+        
+        .button.secondary:active {
+            background: #6d6d70;
+        }
+        
+        .button.destructive {
+            background: #ff3b30;
+        }
+        
+        .button.destructive:active {
+            background: #d70015;
+        }
+        
+        .result-section {
+            display: none;
+            position: relative;
+        }
+        
+        .close-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(142, 142, 147, 0.12);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #8e8e93;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .close-button:hover {
+            background: rgba(142, 142, 147, 0.2);
+            color: #1c1c1e;
+        }
+        
+        .close-button:active {
+            transform: scale(0.95);
+            background: rgba(142, 142, 147, 0.3);
+        }
+        
+        .qr-container {
+            text-align: center;
+            padding: 24px;
+            background: #f2f2f7;
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+        
+        .qr-container p {
+            margin-top: 16px;
+            font-size: 15px;
+            color: #8e8e93;
+        }
+        
+        .share-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .chip {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(0, 122, 255, 0.1);
+            color: #007aff;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 4px;
+        }
+        
+        .url-display {
+            background: #f2f2f7;
+            padding: 16px;
+            border-radius: 12px;
+            word-break: break-all;
+            font-size: 13px;
+            color: #8e8e93;
+            margin: 16px 0;
+            font-family: 'SF Mono', 'Monaco', monospace;
+        }
+        
+        .saved-sets {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .saved-sets h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1c1c1e;
+            margin-bottom: 20px;
+            letter-spacing: -0.4px;
+        }
+        
+        .set-item {
+            padding: 16px;
+            margin: 12px 0;
+            background: #f2f2f7;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .set-info h4 {
+            margin-bottom: 8px;
+            color: #1c1c1e;
+            font-size: 17px;
+            font-weight: 600;
+        }
+        
+        .set-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .mini-button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .mini-button:active {
+            transform: scale(0.95);
+            background: #0056b3;
+        }
+        
+        .mini-button.delete {
+            background: #ff3b30;
+        }
+        
+        .mini-button.delete:active {
+            background: #d70015;
+        }
+        
+        .status-indicator {
+            position: fixed;
+            top: max(env(safe-area-inset-top), 44px);
+            top: calc(max(env(safe-area-inset-top), 44px) + 16px);
+            right: 16px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+            z-index: 1000;
+            max-width: 280px;
+        }
+        
+        .offline-indicator {
+            background: rgba(255, 59, 48, 0.9);
+        }
+        
+        .update-indicator {
+            background: rgba(52, 199, 89, 0.9);
+            cursor: pointer;
+        }
+        
+        /* iOS風のセクション見出し */
+        .section-header {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1c1c1e;
+            margin-bottom: 16px;
+            letter-spacing: -0.4px;
+        }
+        
+        /* iOS風のグループ化されたリスト */
+        .grouped-list {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .list-item {
+            padding: 16px 20px;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.2s ease;
+        }
+        
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        
+        .list-item:active {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        
+        /* ダークモード対応 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #000000;
+                color: #ffffff;
+            }
+            
+            .header h1 {
+                color: #ffffff;
+            }
+            
+            .header p {
+                color: #8e8e93;
+            }
+            
+            .card,
+            .saved-sets,
+            .install-prompt,
+            .grouped-list,
+            .manual-update {
+                background: rgba(28, 28, 30, 0.95);
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .input-group input,
+            .input-group textarea {
+                background: #1c1c1e;
+                color: #ffffff;
+            }
+            
+            .input-group input:focus,
+            .input-group textarea:focus {
+                background: #2c2c2e;
+            }
+            
+            .qr-container,
+            .url-display,
+            .set-item {
+                background: #1c1c1e;
+            }
+            
+            .chip {
+                background: rgba(0, 122, 255, 0.2);
+            }
+            
+            .list-item {
+                border-bottom-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .list-item:active {
+                background: rgba(255, 255, 255, 0.1);
+            }
+            
+            .close-button:hover {
+                background: rgba(255, 255, 255, 0.15);
+                color: #ffffff;
+            }
+            
+            .close-button:active {
+                background: rgba(255, 255, 255, 0.25);
+            }
+            
+            .input-counter {
+                color: #8e8e93;
+            }
+            
+            .input-counter.over-limit {
+                color: #ff453a;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-indicator" id="statusIndicator"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>XSA - X Search Assistant</h1>
+            <p>複数キーワードを効率的にX検索</p>
+            
+            <div class="install-prompt" id="installPrompt">
+                <span>📱 ホーム画面に追加しますか？</span>
+                <button onclick="installApp()">追加</button>
+                <button onclick="dismissInstall()" style="background: #6c757d; margin-left: 10px;">後で</button>
+            </div>
+            
+            <div class="manual-update" id="manualUpdate">
+                <h4>🔄 更新が必要です</h4>
+                <p>自動更新が動作しない場合は、<br>手動でキャッシュをクリアしてください</p>
+                <button onclick="forceUpdate()">強制更新</button>
+                <button onclick="hideManualUpdate()" style="background: #8e8e93;">閉じる</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="input-group">
+                <label>📝 検索セット名</label>
+                <input type="text" id="setName" placeholder="例：推し海外文学作家">
+            </div>
+            
+            <div class="input-group">
+                <label>🔑 検索キーワード（改行で区切る）</label>
+                <textarea id="keywords" rows="5" placeholder="ミルハウザー&#10;カルヴィーノ&#10;ピンチョン&#10;プルースト" oninput="updateCounter('keywords', 'keywordsCounter')"></textarea>
+                <div class="input-counter" id="keywordsCounter">0行 | 0文字</div>
+            </div>
+            
+            <div class="input-group">
+                <label>🚫 除外キーワード（改行で区切る）</label>
+                <textarea id="excludeKeywords" rows="3" placeholder="ジョセフ&#10;銀青" oninput="updateCounter('excludeKeywords', 'excludeKeywordsCounter')"></textarea>
+                <div class="input-counter" id="excludeKeywordsCounter">0行 | 0文字</div>
+            </div>
+            
+            <button class="button" onclick="testSearch()">🔍 検索してみる</button>
+            <button class="button secondary" onclick="saveToLocal()">💾 検索セットを保存</button>
+            <button class="button secondary" onclick="generateShare()">📤 共有リンクを生成</button>
+        </div>
+        
+        <div class="card result-section" id="resultSection">
+            <button class="close-button" onclick="closeResultSection()" title="閉じる">×</button>
+            <h3 class="section-header">✨ 共有する</h3>
+            
+            <div class="qr-container">
+                <div id="qrcode"></div>
+                <p>QRコードをスキャンまたはURLをシェア</p>
+            </div>
+            
+            <div class="url-display" id="urlDisplay"></div>
+            
+            <div class="share-buttons">
+                <button class="button" onclick="shareX()">Xでシェア</button>
+                <button class="button secondary" onclick="copyURL()">URLコピー</button>
+            </div>
+        </div>
+        
+        <div class="saved-sets" id="savedSets" style="display: none;">
+            <h3 class="section-header">📚 保存した検索セット</h3>
+            <div id="setsList"></div>
+        </div>
+    </div>
+    
+    <script>
+        let currentURL = '';
+        let deferredPrompt;
+        let updateAvailable = false;
+        
+        // Service Worker登録（相対パス使用）
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('./sw.js');
+                    console.log('SW registered: ', registration);
+                    
+                    // iOS用デバッグ情報
+                    console.log('PWA Debug Info:', {
+                        userAgent: navigator.userAgent,
+                        standalone: window.navigator.standalone,
+                        serviceWorkerSupported: 'serviceWorker' in navigator,
+                        currentLocation: window.location.href,
+                        manifestLoaded: document.querySelector('link[rel="manifest"]') !== null
+                    });
+                    
+                    // アップデート確認
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showUpdateAvailable();
+                            }
+                        });
+                    });
+                } catch (registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                }
             });
-          
-          return response;
-        }).catch(() => {
-          // オフライン時のフォールバック
-          if (event.request.destination === 'document') {
-            console.log('Service Worker: Fallback to offline page');
-            return caches.match('./');
-          }
+        } else {
+            console.log('Service Worker not supported');
+        }
+        
+        // インストールプロンプト
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // インストール済みかチェック
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                return;
+            }
+            
+            document.getElementById('installPrompt').style.display = 'flex';
         });
-      })
-  );
-});
-
-// メッセージ受信時の処理
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-});
-
-// バックグラウンド同期（オプション）
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'background-sync') {
-    console.log('Service Worker: Background sync v2.8.0');
-    // バックグラウンドでの同期処理をここに追加
-  }
-});
-
-// プッシュ通知（オプション）
-self.addEventListener('push', (event) => {
-  console.log('Service Worker: Push received');
-  
-  const options = {
-    body: event.data ? event.data.text() : 'XSAからの通知',
-    icon: './icon-192.png',
-    badge: './icon-192.png',
-    tag: 'xsa-notification',
-    requireInteraction: true,
-    actions: [
-      {
-        action: 'open',
-        title: '開く'
-      },
-      {
-        action: 'close',
-        title: '閉じる'
-      }
-    ]
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification('XSA - X Search Assistant', options)
-  );
-});
-
-// 通知クリック時の処理
-self.addEventListener('notificationclick', (event) => {
-  console.log('Service Worker: Notification click');
-  
-  event.notification.close();
-  
-  if (event.action === 'open') {
-    event.waitUntil(
-      clients.openWindow('./')
-    );
-  }
-});
+        
+        // PWAインストール後
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            document.getElementById('installPrompt').style.display = 'none';
+        });
+        
+        // オフライン/オンライン状態監視
+        window.addEventListener('online', () => {
+            hideStatus();
+        });
+        
+        window.addEventListener('offline', () => {
+            showStatus('📡 オフラインモード', 'offline-indicator');
+        });
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').style.display = 'none';
+                });
+            }
+        }
+        
+        function dismissInstall() {
+            document.getElementById('installPrompt').style.display = 'none';
+            localStorage.setItem('installDismissed', Date.now());
+        }
+        
+        function showUpdateAvailable() {
+            updateAvailable = true;
+            showStatus('🔄 更新版が利用可能です（クリックで更新）', 'update-indicator');
+            
+            document.getElementById('statusIndicator').onclick = () => {
+                // ボタンを押した時の視覚的フィードバック
+                showStatus('⏳ 更新中...', 'update-indicator');
+                
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistration().then(reg => {
+                        if (reg && reg.waiting) {
+                            // 新しいService Workerに切り替え
+                            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                            
+                            // 少し待ってからリロード
+                            setTimeout(() => {
+                                window.location.reload(true);
+                            }, 500);
+                        } else {
+                            // waiting状態でない場合は強制リロード
+                            console.log('No waiting service worker, force reload');
+                            setTimeout(() => {
+                                window.location.reload(true);
+                            }, 500);
+                        }
+                    }).catch(error => {
+                        console.error('Service Worker update failed:', error);
+                        // エラー時は手動更新UIを表示
+                        document.getElementById('manualUpdate').style.display = 'block';
+                        hideStatus();
+                    });
+                } else {
+                    // Service Worker未対応の場合は通常のリロード
+                    setTimeout(() => {
+                        window.location.reload(true);
+                    }, 500);
+                }
+            };
+        }
+        
+        function forceUpdate() {
+            showStatus('🔄 強制更新中...', 'update-indicator');
+            
+            // Service Worker を完全にクリア
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                }).finally(() => {
+                    // キャッシュも削除
+                    if ('caches' in window) {
+                        caches.keys().then(names => {
+                            return Promise.all(names.map(name => caches.delete(name)));
+                        }).finally(() => {
+                            // 完全リロード
+                            window.location.reload(true);
+                        });
+                    } else {
+                        window.location.reload(true);
+                    }
+                });
+            } else {
+                // ページを強制リロード
+                window.location.href = window.location.href + '?t=' + Date.now();
+            }
+        }
+        
+        function hideManualUpdate() {
+            document.getElementById('manualUpdate').style.display = 'none';
+        }
+        
+        function updateCounter(textareaId, counterId) {
+            const textarea = document.getElementById(textareaId);
+            const counter = document.getElementById(counterId);
+            const text = textarea.value;
+            
+            // 文字数カウント（改行文字を除外）
+            const charCount = text.replace(/\n/g, '').length;
+            
+            // 行数カウント（空文字の場合は0行、それ以外は改行数+1）
+            const lineCount = text === '' ? 0 : text.split('\n').length;
+            
+            // 非空行数もカウント（参考情報として）
+            const nonEmptyLines = text === '' ? 0 : text.split('\n').filter(line => line.trim() !== '').length;
+            
+            // カウンター表示更新
+            counter.textContent = `${lineCount}行 | ${charCount}文字`;
+            
+            // 制限超過時の警告表示（任意：長すぎる場合）
+            if (charCount > 1000 || lineCount > 50) {
+                counter.className = 'input-counter over-limit';
+            } else {
+                counter.className = 'input-counter';
+            }
+            
+            // 非空行数が多い場合の追加情報
+            if (lineCount > 0 && nonEmptyLines !== lineCount) {
+                counter.textContent += ` (有効: ${nonEmptyLines}行)`;
+            }
+        }
+        
+        function showStatus(message, className = '') {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.textContent = message;
+            indicator.className = `status-indicator ${className}`;
+            indicator.style.display = 'block';
+        }
+        
+        function hideStatus() {
+            document.getElementById('statusIndicator').style.display = 'none';
+        }
+        
+        function testSearch() {
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k);
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k);
+            
+            if (keywords.length === 0) {
+                alert('キーワードを入力してください');
+                return;
+            }
+            
+            const includeQuery = keywords.map(k => `"${encodeURIComponent(k.trim())}"`).join('+OR+');
+            const excludeQuery = excludeKeywords.map(k => `-"${encodeURIComponent(k.trim())}"`).join('+');
+            const query = excludeQuery ? `${includeQuery}+${excludeQuery}` : includeQuery;
+            
+            window.open(`https://x.com/search?q=${query}&src=typd&f=tweets&vertical=default`, '_blank');
+        }
+        
+        function saveToLocal() {
+            const name = document.getElementById('setName').value || '名称未設定';
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k);
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k);
+            
+            if (keywords.length === 0) {
+                alert('キーワードを入力してください');
+                return;
+            }
+            
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            const newSet = {
+                id: Date.now(),
+                name: name,
+                keywords: keywords,
+                excludeKeywords: excludeKeywords,
+                createdAt: new Date().toLocaleDateString()
+            };
+            
+            sets.unshift(newSet);
+            localStorage.setItem('xsaSearchSets', JSON.stringify(sets));
+            
+            alert('保存しました！');
+            loadSavedSets();
+        }
+        
+        function loadSavedSets() {
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            
+            if (sets.length === 0) {
+                document.getElementById('savedSets').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('savedSets').style.display = 'block';
+            
+            const html = sets.map(set => `
+                <div class="set-item">
+                    <div class="set-info">
+                        <h4>${set.name}</h4>
+                        <div class="set-keywords">
+                            ${set.keywords.slice(0, 3).map(k => `<span class="chip">${k}</span>`).join('')}
+                            ${set.keywords.length > 3 ? `<span class="chip">+${set.keywords.length - 3}</span>` : ''}
+                        </div>
+                    </div>
+                    <div>
+                        <button class="mini-button" onclick="loadSet(${set.id})">📝 読込</button>
+                        <button class="mini-button" onclick="searchWithSet(${set.id})">🔍 検索</button>
+                        <button class="mini-button delete" onclick="deleteSet(${set.id})">🗑️ 削除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('setsList').innerHTML = html;
+        }
+        
+        function loadSet(id) {
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            const set = sets.find(s => s.id === id);
+            
+            if (set) {
+                document.getElementById('setName').value = set.name;
+                document.getElementById('keywords').value = set.keywords.join('\n');
+                document.getElementById('excludeKeywords').value = set.excludeKeywords.join('\n');
+                
+                // カウンターを更新
+                updateCounter('keywords', 'keywordsCounter');
+                updateCounter('excludeKeywords', 'excludeKeywordsCounter');
+                
+                window.scrollTo(0, 0);
+            }
+        }
+        
+        function searchWithSet(id) {
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            const set = sets.find(s => s.id === id);
+            
+            if (set) {
+                const includeQuery = set.keywords.map(k => `"${encodeURIComponent(k)}"`).join('+OR+');
+                const excludeQuery = set.excludeKeywords.map(k => `-"${encodeURIComponent(k)}"`).join('+');
+                const query = excludeQuery ? `${includeQuery}+${excludeQuery}` : includeQuery;
+                
+                window.open(`https://x.com/search?q=${query}&src=typd&f=tweets&vertical=default`, '_blank');
+            }
+        }
+        
+        function deleteSet(id) {
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            const set = sets.find(s => s.id === id);
+            
+            if (!set) {
+                alert('削除対象の検索セットが見つかりません。');
+                return;
+            }
+            
+            // 確認ダイアログを表示
+            const confirmMessage = `「${set.name}」を削除してもよろしいですか？\n\n含まれるキーワード:\n${set.keywords.join(', ')}\n\nこの操作は取り消せません。`;
+            
+            if (confirm(confirmMessage)) {
+                // 削除実行
+                const updatedSets = sets.filter(s => s.id !== id);
+                localStorage.setItem('xsaSearchSets', JSON.stringify(updatedSets));
+                
+                // 成功メッセージ
+                alert('検索セットを削除しました。');
+                
+                // リストを再読み込み
+                loadSavedSets();
+            }
+        }
+        
+        function generateShare() {
+            const name = document.getElementById('setName').value || '名称未設定';
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k);
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k);
+            
+            if (keywords.length === 0) {
+                alert('キーワードを入力してください');
+                return;
+            }
+            
+            const data = {
+                n: name,
+                k: keywords,
+                e: excludeKeywords
+            };
+            
+            const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
+            currentURL = `${location.origin}${location.pathname}?s=${compressed}`;
+            
+            // QRコード生成
+            const qr = qrcode(0, 'M');
+            qr.addData(currentURL);
+            qr.make();
+            document.getElementById('qrcode').innerHTML = qr.createImgTag(5);
+            
+            // URL表示
+            document.getElementById('urlDisplay').textContent = currentURL;
+            
+            // 結果セクション表示
+            document.getElementById('resultSection').style.display = 'block';
+            
+            // 結果セクションまでスクロール
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function shareX() {
+            const name = document.getElementById('setName').value || '検索セット';
+            const text = `「${name}」の検索セットを作りました！ #XSA`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'XSA - X Search Assistant',
+                    text: text,
+                    url: currentURL
+                }).catch((error) => {
+                    // Web Share API失敗時のフォールバック
+                    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(currentURL)}`, '_blank');
+                });
+            } else {
+                window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(currentURL)}`, '_blank');
+            }
+        }
+        
+        function copyURL() {
+            navigator.clipboard.writeText(currentURL).then(() => {
+                alert('URLをコピーしました！');
+            }).catch(err => {
+                // フォールバック
+                const textArea = document.createElement('textarea');
+                textArea.value = currentURL;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('URLをコピーしました！');
+            });
+        }
+        
+        function closeResultSection() {
+            document.getElementById('resultSection').style.display = 'none';
+            // QRコードをクリア（メモリ節約のため）
+            document.getElementById('qrcode').innerHTML = '';
+            document.getElementById('urlDisplay').textContent = '';
+            currentURL = '';
+        }
+        
+        // インポート処理
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(location.search);
+            const compressed = params.get('s');
+            
+            if (compressed) {
+                try {
+                    const json = LZString.decompressFromEncodedURIComponent(compressed);
+                    const data = JSON.parse(json);
+                    
+                    if (confirm(`「${data.n}」をインポートしますか？`)) {
+                        document.getElementById('setName').value = data.n;
+                        document.getElementById('keywords').value = data.k.join('\n');
+                        document.getElementById('excludeKeywords').value = (data.e || []).join('\n');
+                        
+                        // カウンターを更新
+                        updateCounter('keywords', 'keywordsCounter');
+                        updateCounter('excludeKeywords', 'excludeKeywordsCounter');
+                        
+                        history.replaceState(null, '', location.pathname);
+                        alert('インポート完了！');
+                    }
+                } catch (e) {
+                    console.error('インポートエラー:', e);
+                }
+            }
+            
+            // 保存済みセットを読み込み
+            loadSavedSets();
+            
+            // カウンターを初期化
+            updateCounter('keywords', 'keywordsCounter');
+            updateCounter('excludeKeywords', 'excludeKeywordsCounter');
+            
+            // インストールプロンプトの表示判定
+            const dismissed = localStorage.getItem('installDismissed');
+            if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) {
+                // 7日以内に却下されている場合は表示しない
+                return;
+            }
+        });
+    </script>
+</body>
+</html>
