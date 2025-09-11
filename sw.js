@@ -1,4 +1,4 @@
-const CACHE_NAME = 'xsa-v2.13.0';
+const CACHE_NAME = 'xsa-v2.14.0';
 const urlsToCache = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const urlsToCache = [
 
 // インストール時の処理
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Install v2.13.0');
+  console.log('Service Worker: Install v2.14.0');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
