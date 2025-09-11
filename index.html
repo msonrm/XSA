@@ -188,6 +188,46 @@
             font-weight: 600;
         }
         
+        .query-info {
+            background: #f2f2f7;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+        
+        .query-preview {
+            margin-bottom: 12px;
+        }
+        
+        .query-text {
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 13px;
+            word-break: break-all;
+            color: #1c1c1e;
+            border: 1px solid #e5e5ea;
+        }
+        
+        .query-length {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .query-length span {
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-weight: 600;
+            color: #007aff;
+        }
+        
+        .query-length span.over-limit {
+            color: #ff3b30;
+        }
+        
         .button {
             background: #007aff;
             color: white;
@@ -466,10 +506,17 @@
                 background: #2c2c2e;
             }
             
+            .query-info,
             .qr-container,
             .url-display,
             .set-item {
                 background: #1c1c1e;
+            }
+            
+            .query-text {
+                background: #2c2c2e;
+                color: #ffffff;
+                border-color: #3a3a3c;
             }
             
             .chip {
@@ -541,6 +588,16 @@
                 <label>🚫 除外キーワード（改行で区切る）</label>
                 <textarea id="excludeKeywords" rows="3" placeholder="ジョセフ&#10;銀青" oninput="updateCounter('excludeKeywords', 'excludeKeywordsCounter')"></textarea>
                 <div class="input-counter" id="excludeKeywordsCounter">0行 | 0文字</div>
+            </div>
+            
+            <div class="query-info" id="queryInfo" style="display: none;">
+                <div class="query-preview">
+                    <strong>🔗 検索クエリ:</strong>
+                    <div class="query-text" id="queryText"></div>
+                </div>
+                <div class="query-length">
+                    <strong>📏 URI encode後:</strong> <span id="queryLength">0</span>文字
+                </div>
             </div>
             
             <button class="button" onclick="testSearch()">🔍 検索してみる</button>
@@ -755,6 +812,43 @@
             if (lineCount > 0 && nonEmptyLines !== lineCount) {
                 counter.textContent += ` (有効: ${nonEmptyLines}行)`;
             }
+            
+            // 検索クエリ情報を更新
+            updateQueryInfo();
+        }
+        
+        function updateQueryInfo() {
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k.trim());
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k.trim());
+            const queryInfo = document.getElementById('queryInfo');
+            
+            if (keywords.length === 0) {
+                queryInfo.style.display = 'none';
+                return;
+            }
+            
+            // クエリを生成
+            const includeQuery = keywords.map(k => `"${k.trim()}"`).join(' OR ');
+            const excludeQuery = excludeKeywords.map(k => `-"${k.trim()}"`).join(' ');
+            const fullQuery = excludeQuery ? `${includeQuery} ${excludeQuery}` : includeQuery;
+            
+            // URI encodeして文字数を計算
+            const encodedQuery = encodeURIComponent(fullQuery);
+            const queryLength = encodedQuery.length;
+            
+            // 表示を更新
+            document.getElementById('queryText').textContent = fullQuery;
+            const lengthSpan = document.getElementById('queryLength');
+            lengthSpan.textContent = queryLength;
+            
+            // 文字数制限の警告（Xの検索URLは一般的に500文字程度が安全）
+            if (queryLength > 500) {
+                lengthSpan.className = 'over-limit';
+            } else {
+                lengthSpan.className = '';
+            }
+            
+            queryInfo.style.display = 'block';
         }
         
         function showStatus(message, className = '') {
