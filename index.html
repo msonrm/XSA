@@ -88,45 +88,6 @@
             cursor: pointer;
         }
         
-        .manual-update {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 0.5px solid rgba(0, 0, 0, 0.04);
-            color: #1c1c1e;
-            padding: 16px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            display: none;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        
-        .manual-update h4 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #ff3b30;
-        }
-        
-        .manual-update p {
-            font-size: 14px;
-            color: #8e8e93;
-            margin-bottom: 12px;
-            line-height: 1.4;
-        }
-        
-        .manual-update button {
-            background: #ff3b30;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 14px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            margin: 0 4px;
-        }
-        
         .card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -225,14 +186,6 @@
             background: #6d6d70;
         }
         
-        .button.destructive {
-            background: #ff3b30;
-        }
-        
-        .button.destructive:active {
-            background: #d70015;
-        }
-        
         .result-section {
             display: none;
             position: relative;
@@ -288,17 +241,6 @@
             margin-top: 20px;
         }
         
-        .chip {
-            display: inline-block;
-            padding: 6px 12px;
-            background: rgba(0, 122, 255, 0.1);
-            color: #007aff;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            margin: 4px;
-        }
-        
         .url-display {
             background: #f2f2f7;
             padding: 16px;
@@ -352,6 +294,17 @@
             margin-top: 8px;
         }
         
+        .chip {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(0, 122, 255, 0.1);
+            color: #007aff;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 4px;
+        }
+        
         .mini-button {
             background: #007aff;
             color: white;
@@ -378,66 +331,12 @@
             background: #d70015;
         }
         
-        .status-indicator {
-            position: fixed;
-            top: max(env(safe-area-inset-top), 44px);
-            top: calc(max(env(safe-area-inset-top), 44px) + 16px);
-            right: 16px;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(20px);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 500;
-            display: none;
-            z-index: 1000;
-            max-width: 280px;
-        }
-        
-        .offline-indicator {
-            background: rgba(255, 59, 48, 0.9);
-        }
-        
-        .update-indicator {
-            background: rgba(52, 199, 89, 0.9);
-            cursor: pointer;
-        }
-        
-        /* iOS風のセクション見出し */
         .section-header {
             font-size: 22px;
             font-weight: 700;
             color: #1c1c1e;
             margin-bottom: 16px;
             letter-spacing: -0.4px;
-        }
-        
-        /* iOS風のグループ化されたリスト */
-        .grouped-list {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 0.5px solid rgba(0, 0, 0, 0.04);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        
-        .list-item {
-            padding: 16px 20px;
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.04);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: background-color 0.2s ease;
-        }
-        
-        .list-item:last-child {
-            border-bottom: none;
-        }
-        
-        .list-item:active {
-            background: rgba(0, 0, 0, 0.04);
         }
         
         /* ダークモード対応 */
@@ -457,9 +356,7 @@
             
             .card,
             .saved-sets,
-            .install-prompt,
-            .grouped-list,
-            .manual-update {
+            .install-prompt {
                 background: rgba(28, 28, 30, 0.95);
                 border-color: rgba(255, 255, 255, 0.1);
             }
@@ -485,23 +382,6 @@
                 background: rgba(0, 122, 255, 0.2);
             }
             
-            .list-item {
-                border-bottom-color: rgba(255, 255, 255, 0.1);
-            }
-            
-            .list-item:active {
-                background: rgba(255, 255, 255, 0.1);
-            }
-            
-            .close-button:hover {
-                background: rgba(255, 255, 255, 0.15);
-                color: #ffffff;
-            }
-            
-            .close-button:active {
-                background: rgba(255, 255, 255, 0.25);
-            }
-            
             .search-query-info {
                 background: #2c2c2e;
                 border-left-color: #0a84ff;
@@ -519,8 +399,6 @@
     </style>
 </head>
 <body>
-    <div class="status-indicator" id="statusIndicator"></div>
-    
     <div class="container">
         <div class="header">
             <h1>XSA - X Search Assistant</h1>
@@ -530,13 +408,6 @@
                 <span>📱 ホーム画面に追加しますか？</span>
                 <button onclick="installApp()">追加</button>
                 <button onclick="dismissInstall()" style="background: #6c757d; margin-left: 10px;">後で</button>
-            </div>
-            
-            <div class="manual-update" id="manualUpdate">
-                <h4>🔄 更新が必要です</h4>
-                <p>自動更新が動作しない場合は、<br>手動でキャッシュをクリアしてください</p>
-                <button onclick="forceUpdate()">強制更新</button>
-                <button onclick="hideManualUpdate()" style="background: #8e8e93;">閉じる</button>
             </div>
         </div>
         
@@ -591,39 +462,17 @@
     <script>
         let currentURL = '';
         let deferredPrompt;
-        let updateAvailable = false;
         
-        // Service Worker登録（相対パス使用）
+        // Service Worker登録
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', async () => {
                 try {
                     const registration = await navigator.serviceWorker.register('./sw.js');
                     console.log('SW registered: ', registration);
-                    
-                    // iOS用デバッグ情報
-                    console.log('PWA Debug Info:', {
-                        userAgent: navigator.userAgent,
-                        standalone: window.navigator.standalone,
-                        serviceWorkerSupported: 'serviceWorker' in navigator,
-                        currentLocation: window.location.href,
-                        manifestLoaded: document.querySelector('link[rel="manifest"]') !== null
-                    });
-                    
-                    // アップデート確認
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                showUpdateAvailable();
-                            }
-                        });
-                    });
                 } catch (registrationError) {
                     console.log('SW registration failed: ', registrationError);
                 }
             });
-        } else {
-            console.log('Service Worker not supported');
         }
         
         // インストールプロンプト
@@ -631,7 +480,6 @@
             e.preventDefault();
             deferredPrompt = e;
             
-            // インストール済みかチェック
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 return;
             }
@@ -639,19 +487,9 @@
             document.getElementById('installPrompt').style.display = 'flex';
         });
         
-        // PWAインストール後
         window.addEventListener('appinstalled', () => {
             console.log('PWA was installed');
             document.getElementById('installPrompt').style.display = 'none';
-        });
-        
-        // オフライン/オンライン状態監視
-        window.addEventListener('online', () => {
-            hideStatus();
-        });
-        
-        window.addEventListener('offline', () => {
-            showStatus('📡 オフラインモード', 'offline-indicator');
         });
         
         function installApp() {
@@ -670,78 +508,6 @@
         function dismissInstall() {
             document.getElementById('installPrompt').style.display = 'none';
             localStorage.setItem('installDismissed', Date.now());
-        }
-        
-        function showUpdateAvailable() {
-            updateAvailable = true;
-            showStatus('🔄 更新版が利用可能です（クリックで更新）', 'update-indicator');
-            
-            document.getElementById('statusIndicator').onclick = () => {
-                // ボタンを押した時の視覚的フィードバック
-                showStatus('⏳ 更新中...', 'update-indicator');
-                
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistration().then(reg => {
-                        if (reg && reg.waiting) {
-                            // 新しいService Workerに切り替え
-                            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                            
-                            // 少し待ってからリロード
-                            setTimeout(() => {
-                                window.location.reload(true);
-                            }, 500);
-                        } else {
-                            // waiting状態でない場合は強制リロード
-                            console.log('No waiting service worker, force reload');
-                            setTimeout(() => {
-                                window.location.reload(true);
-                            }, 500);
-                        }
-                    }).catch(error => {
-                        console.error('Service Worker update failed:', error);
-                        // エラー時は手動更新UIを表示
-                        document.getElementById('manualUpdate').style.display = 'block';
-                        hideStatus();
-                    });
-                } else {
-                    // Service Worker未対応の場合は通常のリロード
-                    setTimeout(() => {
-                        window.location.reload(true);
-                    }, 500);
-                }
-            };
-        }
-        
-        function forceUpdate() {
-            showStatus('🔄 強制更新中...', 'update-indicator');
-            
-            // Service Worker を完全にクリア
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
-                    for (let registration of registrations) {
-                        registration.unregister();
-                    }
-                }).finally(() => {
-                    // キャッシュも削除
-                    if ('caches' in window) {
-                        caches.keys().then(names => {
-                            return Promise.all(names.map(name => caches.delete(name)));
-                        }).finally(() => {
-                            // 完全リロード
-                            window.location.reload(true);
-                        });
-                    } else {
-                        window.location.reload(true);
-                    }
-                });
-            } else {
-                // ページを強制リロード
-                window.location.href = window.location.href + '?t=' + Date.now();
-            }
-        }
-        
-        function hideManualUpdate() {
-            document.getElementById('manualUpdate').style.display = 'none';
         }
         
         function updateSearchQuery() {
@@ -773,7 +539,7 @@
                 <strong>エンコード後文字数:</strong> ${encodedLength}文字
             `;
             
-            // X の検索URL文字数制限（約2048文字）を超える場合の警告
+            // 制限超過警告
             if (encodedLength > 1500) {
                 queryInfo.className = 'search-query-info over-limit';
             } else {
@@ -781,20 +547,9 @@
             }
         }
         
-        function showStatus(message, className = '') {
-            const indicator = document.getElementById('statusIndicator');
-            indicator.textContent = message;
-            indicator.className = `status-indicator ${className}`;
-            indicator.style.display = 'block';
-        }
-        
-        function hideStatus() {
-            document.getElementById('statusIndicator').style.display = 'none';
-        }
-        
         function testSearch() {
-            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k);
-            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k);
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k.trim());
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k.trim());
             
             if (keywords.length === 0) {
                 alert('キーワードを入力してください');
@@ -810,20 +565,14 @@
         
         function saveToLocal() {
             const name = document.getElementById('setName').value || '名称未設定';
-            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k);
-            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k);
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k.trim());
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k.trim());
             
             if (keywords.length === 0) {
                 alert('キーワードを入力してください');
                 return;
             }
             
-            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
-            const newSet = {
-                id: Date.now(),
-                name: name,
-                keywords: keywords,
-                excludeKeywords: excludeKeywords,
             const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
             const newSet = {
                 id: Date.now(),
@@ -879,9 +628,7 @@
                 document.getElementById('keywords').value = set.keywords.join('\n');
                 document.getElementById('excludeKeywords').value = set.excludeKeywords.join('\n');
                 
-                // 検索クエリ情報を更新
                 updateSearchQuery();
-                
                 window.scrollTo(0, 0);
             }
         }
@@ -908,26 +655,21 @@
                 return;
             }
             
-            // 確認ダイアログを表示
             const confirmMessage = `「${set.name}」を削除してもよろしいですか？\n\n含まれるキーワード:\n${set.keywords.join(', ')}\n\nこの操作は取り消せません。`;
             
             if (confirm(confirmMessage)) {
-                // 削除実行
                 const updatedSets = sets.filter(s => s.id !== id);
                 localStorage.setItem('xsaSearchSets', JSON.stringify(updatedSets));
                 
-                // 成功メッセージ
                 alert('検索セットを削除しました。');
-                
-                // リストを再読み込み
                 loadSavedSets();
             }
         }
         
         function generateShare() {
             const name = document.getElementById('setName').value || '名称未設定';
-            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k);
-            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k);
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k.trim());
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k.trim());
             
             if (keywords.length === 0) {
                 alert('キーワードを入力してください');
@@ -969,7 +711,6 @@
                     text: text,
                     url: currentURL
                 }).catch((error) => {
-                    // Web Share API失敗時のフォールバック
                     window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(currentURL)}`, '_blank');
                 });
             } else {
@@ -981,7 +722,6 @@
             navigator.clipboard.writeText(currentURL).then(() => {
                 alert('URLをコピーしました！');
             }).catch(err => {
-                // フォールバック
                 const textArea = document.createElement('textarea');
                 textArea.value = currentURL;
                 document.body.appendChild(textArea);
@@ -994,13 +734,12 @@
         
         function closeResultSection() {
             document.getElementById('resultSection').style.display = 'none';
-            // QRコードをクリア（メモリ節約のため）
             document.getElementById('qrcode').innerHTML = '';
             document.getElementById('urlDisplay').textContent = '';
             currentURL = '';
         }
         
-        // インポート処理
+        // DOMContentLoaded
         window.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(location.search);
             const compressed = params.get('s');
@@ -1015,7 +754,6 @@
                         document.getElementById('keywords').value = data.k.join('\n');
                         document.getElementById('excludeKeywords').value = (data.e || []).join('\n');
                         
-                        // 検索クエリ情報を更新
                         updateSearchQuery();
                         
                         history.replaceState(null, '', location.pathname);
@@ -1026,16 +764,11 @@
                 }
             }
             
-            // 保存済みセットを読み込み
             loadSavedSets();
-            
-            // 検索クエリ情報を初期化
             updateSearchQuery();
             
-            // インストールプロンプトの表示判定
             const dismissed = localStorage.getItem('installDismissed');
             if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) {
-                // 7日以内に却下されている場合は表示しない
                 return;
             }
         });
