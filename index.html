@@ -25,6 +25,12 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        html {
+            overscroll-behavior: none;
+            -webkit-overscroll-behavior: none;
         }
         
         body {
@@ -35,6 +41,8 @@
             padding-top: max(env(safe-area-inset-top), 44px);
             padding-bottom: max(env(safe-area-inset-bottom), 20px);
             color: #1c1c1e;
+            overscroll-behavior: contain;
+            -webkit-overscroll-behavior: contain;
         }
         
         .container {
@@ -188,44 +196,80 @@
             font-weight: 600;
         }
         
-        .query-info {
-            background: #f2f2f7;
-            border-radius: 12px;
-            padding: 16px;
-            margin: 16px 0;
-            font-size: 14px;
+        /* 検索クエリプレビューセクションのスタイル */
+        .query-preview-section {
+            margin-top: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .query-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .query-section-header:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        
+        .query-section-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #8e8e93;
+        }
+        
+        .expand-icon {
+            font-size: 12px;
+            color: #8e8e93;
+            transition: transform 0.3s ease;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        .expand-icon.expanded {
+            transform: rotate(180deg);
         }
         
         .query-preview {
-            margin-bottom: 12px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
         }
         
-        .query-text {
-            background: #ffffff;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 8px;
+        .query-preview.expanded {
+            display: block;
+        }
+        
+        .query-display {
+            background: #f2f2f7;
+            padding: 16px;
+            border-radius: 12px;
             font-family: 'SF Mono', 'Monaco', monospace;
-            font-size: 13px;
-            word-break: break-all;
+            font-size: 14px;
             color: #1c1c1e;
-            border: 1px solid #e5e5ea;
+            word-break: break-all;
+            line-height: 1.4;
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
         
-        .query-length {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .query-display.empty {
+            color: #8e8e93;
+            font-style: italic;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
         }
         
-        .query-length span {
-            font-family: 'SF Mono', 'Monaco', monospace;
-            font-weight: 600;
-            color: #007aff;
-        }
-        
-        .query-length span.over-limit {
-            color: #ff3b30;
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .button {
@@ -304,12 +348,17 @@
             background: #f2f2f7;
             border-radius: 16px;
             margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
-        .qr-container p {
-            margin-top: 16px;
-            font-size: 15px;
-            color: #8e8e93;
+        /* QRコードサイズ調整 */
+        .qr-container img {
+            max-width: 200px;
+            max-height: 200px;
+            width: auto;
+            height: auto;
         }
         
         .share-buttons {
@@ -364,9 +413,6 @@
             margin: 12px 0;
             background: #f2f2f7;
             border-radius: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         
         .set-info h4 {
@@ -380,7 +426,23 @@
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
-            margin-top: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .set-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .set-actions-left {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .set-actions-right {
+            display: flex;
+            gap: 8px;
         }
         
         .mini-button {
@@ -392,7 +454,6 @@
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            margin-left: 8px;
             transition: all 0.2s ease;
         }
         
@@ -506,17 +567,10 @@
                 background: #2c2c2e;
             }
             
-            .query-info,
             .qr-container,
             .url-display,
             .set-item {
                 background: #1c1c1e;
-            }
-            
-            .query-text {
-                background: #2c2c2e;
-                color: #ffffff;
-                border-color: #3a3a3c;
             }
             
             .chip {
@@ -547,6 +601,20 @@
             .input-counter.over-limit {
                 color: #ff453a;
             }
+            
+            .query-display {
+                background: #1c1c1e;
+                color: #ffffff;
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .query-display.empty {
+                color: #8e8e93;
+            }
+            
+            .query-section-header:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
         }
     </style>
 </head>
@@ -556,7 +624,7 @@
     <div class="container">
         <div class="header">
             <h1>XSA - X Search Assistant</h1>
-            <p>複数キーワードを効率的にX検索</p>
+            <p>Xを複数キーワードで効率的に検索</p>
             
             <div class="install-prompt" id="installPrompt">
                 <span>📱 ホーム画面に追加しますか？</span>
@@ -575,28 +643,31 @@
         <div class="card">
             <div class="input-group">
                 <label>📝 検索セット名</label>
-                <input type="text" id="setName" placeholder="例：推し海外文学作家">
+                <input type="text" id="setName" placeholder="推し海外文学作家">
             </div>
             
             <div class="input-group">
                 <label>🔑 検索キーワード（改行で区切る）</label>
-                <textarea id="keywords" rows="5" placeholder="ミルハウザー&#10;カルヴィーノ&#10;ピンチョン&#10;プルースト" oninput="updateCounter('keywords', 'keywordsCounter')"></textarea>
+                <textarea id="keywords" rows="5" placeholder="ミルハウザー&#10;カルヴィーノ&#10;ピンチョン&#10;プルースト" oninput="updateCounter('keywords', 'keywordsCounter'); updateQueryPreview()"></textarea>
                 <div class="input-counter" id="keywordsCounter">0行 | 0文字</div>
             </div>
             
             <div class="input-group">
                 <label>🚫 除外キーワード（改行で区切る）</label>
-                <textarea id="excludeKeywords" rows="3" placeholder="ジョセフ&#10;銀青" oninput="updateCounter('excludeKeywords', 'excludeKeywordsCounter')"></textarea>
+                <textarea id="excludeKeywords" rows="3" placeholder="ジョセフ&#10;銀青" oninput="updateCounter('excludeKeywords', 'excludeKeywordsCounter'); updateQueryPreview()"></textarea>
                 <div class="input-counter" id="excludeKeywordsCounter">0行 | 0文字</div>
             </div>
             
-            <div class="query-info" id="queryInfo" style="display: none;">
-                <div class="query-preview">
-                    <strong>🔗 検索クエリ:</strong>
-                    <div class="query-text" id="queryText"></div>
+            <div class="query-preview-section">
+                <div class="query-section-header" onclick="toggleQuerySection()">
+                    <span class="query-section-title">検索クエリプレビュー</span>
+                    <span class="expand-icon" id="expandIcon">▼</span>
                 </div>
-                <div class="query-length">
-                    <strong>📏 URI encode後:</strong> <span id="queryLength">0</span>文字
+                
+                <div class="query-preview" id="queryPreview">
+                    <div class="query-display" id="queryDisplay">
+                        キーワードを入力すると、実際の検索クエリが表示されます
+                    </div>
                 </div>
             </div>
             
@@ -611,7 +682,6 @@
             
             <div class="qr-container">
                 <div id="qrcode"></div>
-                <p>QRコードをスキャンまたはURLをシェア</p>
             </div>
             
             <div class="url-display" id="urlDisplay"></div>
@@ -632,6 +702,7 @@
         let currentURL = '';
         let deferredPrompt;
         let updateAvailable = false;
+        let queryExpanded = false;
         
         // Service Worker登録（相対パス使用）
         if ('serviceWorker' in navigator) {
@@ -664,6 +735,46 @@
             });
         } else {
             console.log('Service Worker not supported');
+        }
+        
+        // 検索クエリセクションの展開/折りたたみ
+        function toggleQuerySection() {
+            const queryPreview = document.getElementById('queryPreview');
+            const expandIcon = document.getElementById('expandIcon');
+            
+            queryExpanded = !queryExpanded;
+            
+            if (queryExpanded) {
+                queryPreview.classList.add('expanded');
+                expandIcon.classList.add('expanded');
+            } else {
+                queryPreview.classList.remove('expanded');
+                expandIcon.classList.remove('expanded');
+            }
+        }
+        
+        // 検索クエリプレビューの更新
+        function updateQueryPreview() {
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k.trim());
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k.trim());
+            const queryDisplay = document.getElementById('queryDisplay');
+            
+            if (keywords.length === 0) {
+                queryDisplay.textContent = 'キーワードを入力すると、実際の検索クエリが表示されます';
+                queryDisplay.className = 'query-display empty';
+                return;
+            }
+            
+            // 検索クエリを生成
+            const includeQuery = keywords.map(k => `"${k.trim()}"`).join(' OR ');
+            const excludeQuery = excludeKeywords.length > 0 
+                ? ' ' + excludeKeywords.map(k => `-"${k.trim()}"`).join(' ')
+                : '';
+            
+            const fullQuery = includeQuery + excludeQuery;
+            
+            queryDisplay.textContent = fullQuery;
+            queryDisplay.className = 'query-display';
         }
         
         // インストールプロンプト
@@ -812,43 +923,6 @@
             if (lineCount > 0 && nonEmptyLines !== lineCount) {
                 counter.textContent += ` (有効: ${nonEmptyLines}行)`;
             }
-            
-            // 検索クエリ情報を更新
-            updateQueryInfo();
-        }
-        
-        function updateQueryInfo() {
-            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k.trim());
-            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k.trim());
-            const queryInfo = document.getElementById('queryInfo');
-            
-            if (keywords.length === 0) {
-                queryInfo.style.display = 'none';
-                return;
-            }
-            
-            // クエリを生成
-            const includeQuery = keywords.map(k => `"${k.trim()}"`).join(' OR ');
-            const excludeQuery = excludeKeywords.map(k => `-"${k.trim()}"`).join(' ');
-            const fullQuery = excludeQuery ? `${includeQuery} ${excludeQuery}` : includeQuery;
-            
-            // URI encodeして文字数を計算
-            const encodedQuery = encodeURIComponent(fullQuery);
-            const queryLength = encodedQuery.length;
-            
-            // 表示を更新
-            document.getElementById('queryText').textContent = fullQuery;
-            const lengthSpan = document.getElementById('queryLength');
-            lengthSpan.textContent = queryLength;
-            
-            // 文字数制限の警告（Xの検索URLは一般的に500文字程度が安全）
-            if (queryLength > 500) {
-                lengthSpan.className = 'over-limit';
-            } else {
-                lengthSpan.className = '';
-            }
-            
-            queryInfo.style.display = 'block';
         }
         
         function showStatus(message, className = '') {
@@ -923,10 +997,14 @@
                             ${set.keywords.length > 3 ? `<span class="chip">+${set.keywords.length - 3}</span>` : ''}
                         </div>
                     </div>
-                    <div>
-                        <button class="mini-button" onclick="loadSet(${set.id})">📝 読込</button>
-                        <button class="mini-button" onclick="searchWithSet(${set.id})">🔍 検索</button>
-                        <button class="mini-button delete" onclick="deleteSet(${set.id})">🗑️ 削除</button>
+                    <div class="set-actions">
+                        <div class="set-actions-left">
+                            <button class="mini-button delete" onclick="deleteSet(${set.id})">🗑️ 削除</button>
+                        </div>
+                        <div class="set-actions-right">
+                            <button class="mini-button" onclick="loadSet(${set.id})">📝 読込</button>
+                            <button class="mini-button" onclick="searchWithSet(${set.id})">🔍 検索</button>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -938,17 +1016,62 @@
             const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
             const set = sets.find(s => s.id === id);
             
-            if (set) {
-                document.getElementById('setName').value = set.name;
-                document.getElementById('keywords').value = set.keywords.join('\n');
-                document.getElementById('excludeKeywords').value = set.excludeKeywords.join('\n');
-                
-                // カウンターを更新
-                updateCounter('keywords', 'keywordsCounter');
-                updateCounter('excludeKeywords', 'excludeKeywordsCounter');
-                
-                window.scrollTo(0, 0);
+            if (!set) {
+                alert('読み込み対象の検索セットが見つかりません。');
+                return;
             }
+            
+            // 現在の入力内容をチェック
+            const currentSetName = document.getElementById('setName').value.trim();
+            const currentKeywords = document.getElementById('keywords').value.trim();
+            const currentExcludeKeywords = document.getElementById('excludeKeywords').value.trim();
+            
+            // いずれかのフィールドに内容がある場合は警告を表示
+            if (currentSetName || currentKeywords || currentExcludeKeywords) {
+                const confirmMessage = `作成中の検索セットが上書きされます。\n\n現在の内容:\n検索セット名: ${currentSetName || '(未入力)'}\n検索キーワード: ${currentKeywords ? currentKeywords.split('\n').length + '個のキーワード' : '(未入力)'}\n除外キーワード: ${currentExcludeKeywords ? currentExcludeKeywords.split('\n').length + '個のキーワード' : '(未入力)'}\n\n先に現在の内容を保存しますか？`;
+                
+                const result = confirm(confirmMessage);
+                
+                if (result) {
+                    // 保存処理を実行
+                    saveToLocal();
+                    // 保存が完了してから読み込みを実行
+                    setTimeout(() => {
+                        loadSetContent(set);
+                    }, 500);
+                    return;
+                }
+                
+                // 「いいえ」を選んだ場合は上書き確認
+                const overwriteConfirm = confirm('現在の内容を破棄して読み込みますか？');
+                if (!overwriteConfirm) {
+                    return; // キャンセル
+                }
+            }
+            
+            // 読み込み実行
+            loadSetContent(set);
+        }
+        
+        function loadSetContent(set) {
+            document.getElementById('setName').value = set.name;
+            document.getElementById('keywords').value = set.keywords.join('\n');
+            document.getElementById('excludeKeywords').value = set.excludeKeywords.join('\n');
+            
+            // カウンターを更新
+            updateCounter('keywords', 'keywordsCounter');
+            updateCounter('excludeKeywords', 'excludeKeywordsCounter');
+            
+            // 検索クエリプレビューを更新
+            updateQueryPreview();
+            
+            window.scrollTo(0, 0);
+            
+            // 読み込み完了のフィードバック
+            showStatus('🔄 検索セットを読み込みました', '');
+            setTimeout(() => {
+                hideStatus();
+            }, 2000);
         }
         
         function searchWithSet(id) {
@@ -1008,11 +1131,11 @@
             const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
             currentURL = `${location.origin}${location.pathname}?s=${compressed}`;
             
-            // QRコード生成
+            // QRコード生成（サイズを調整）
             const qr = qrcode(0, 'M');
             qr.addData(currentURL);
             qr.make();
-            document.getElementById('qrcode').innerHTML = qr.createImgTag(5);
+            document.getElementById('qrcode').innerHTML = qr.createImgTag(4); // セルサイズを4に変更
             
             // URL表示
             document.getElementById('urlDisplay').textContent = currentURL;
@@ -1084,6 +1207,9 @@
                         updateCounter('keywords', 'keywordsCounter');
                         updateCounter('excludeKeywords', 'excludeKeywordsCounter');
                         
+                        // 検索クエリプレビューを更新
+                        updateQueryPreview();
+                        
                         history.replaceState(null, '', location.pathname);
                         alert('インポート完了！');
                     }
@@ -1098,6 +1224,9 @@
             // カウンターを初期化
             updateCounter('keywords', 'keywordsCounter');
             updateCounter('excludeKeywords', 'excludeKeywordsCounter');
+            
+            // 検索クエリプレビューを初期化
+            updateQueryPreview();
             
             // インストールプロンプトの表示判定
             const dismissed = localStorage.getItem('installDismissed');
