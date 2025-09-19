@@ -3,1262 +3,1238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TLW - ブックマーク</title>
+    <title>XSA - X Search Assistant</title>
     
     <!-- PWA設定 -->
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#007AFF">
+    <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="TLW">
-    <link rel="apple-touch-icon" href="./icon-192.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+    <meta name="apple-mobile-web-app-title" content="XSA">
+    <meta name="mobile-web-app-capable" content="yes">
     
+    <!-- アイコン設定 -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./icon-192.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
         }
-
-        :root {
-            --primary-color: #007AFF;
-            --secondary-color: #5856D6;
-            --background-color: #F2F2F7;
-            --surface-color: #FFFFFF;
-            --text-primary: #000000;
-            --text-secondary: #8E8E93;
-            --border-color: #C6C6C8;
-            --destructive-color: #FF3B30;
-            --success-color: #34C759;
-            --header-height: 140px;
+        
+        html {
+            overscroll-behavior: none;
+            -webkit-overscroll-behavior: none;
         }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --background-color: #000000;
-                --surface-color: #1C1C1E;
-                --text-primary: #FFFFFF;
-                --text-secondary: #8E8E93;
-                --border-color: #38383A;
-            }
-        }
-
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-primary);
-            line-height: 1.5;
-            padding-top: var(--header-height);
-            overscroll-behavior-y: contain;
-            touch-action: pan-y;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: #f2f2f7;
+            min-height: 100vh;
+            padding: 0;
+            padding-top: max(env(safe-area-inset-top), 44px);
+            padding-bottom: max(env(safe-area-inset-bottom), 20px);
+            color: #1c1c1e;
+            overscroll-behavior: contain;
+            -webkit-overscroll-behavior: contain;
         }
-
+        
+        .container {
+            max-width: 428px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+        
         .header {
-            background-color: var(--surface-color);
-            border-bottom: 0.5px solid var(--border-color);
-            padding: 16px 20px 20px 20px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            height: var(--header-height);
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 20px 0;
         }
-
-        .header-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .header-title h1 {
-            font-size: 28px;
+        
+        .header h1 {
+            font-size: 34px;
             font-weight: 700;
-            color: var(--text-primary);
-            margin: 0;
-            white-space: nowrap;
+            color: #1c1c1e;
+            margin-bottom: 8px;
+            letter-spacing: -0.8px;
         }
-
-        .header-subtitle {
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin-left: 8px;
+        
+        .header p {
+            font-size: 17px;
+            color: #8e8e93;
+            font-weight: 400;
         }
-
-        .help-button {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: var(--primary-color);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-            transition: background-color 0.2s;
-        }
-
-        .help-button:hover {
-            background-color: rgba(0, 122, 255, 0.1);
-        }
-
-        .header-controls {
-            display: flex;
-            gap: 12px;
+        
+        .install-prompt {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            color: #1c1c1e;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: none;
             align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-
-        .search-input {
-            flex: 1;
-            padding: 10px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            font-size: 16px;
-            background-color: var(--background-color);
-            color: var(--text-primary);
-            transition: border-color 0.2s, box-shadow 0.2s;
-            min-width: 0;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
-        }
-
-        .search-input::placeholder {
-            color: var(--text-secondary);
-        }
-
-        .add-button {
-            background-color: var(--primary-color);
+        
+        .install-prompt button {
+            background: #007aff;
             color: white;
             border: none;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            font-size: 24px;
+            padding: 8px 16px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 15px;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.2s;
+        }
+        
+        .manual-update {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            color: #1c1c1e;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .manual-update h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ff3b30;
+        }
+        
+        .manual-update p {
+            font-size: 14px;
+            color: #8e8e93;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        
+        .manual-update button {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 0 4px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-group {
+            margin-bottom: 24px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 17px;
+            color: #1c1c1e;
+        }
+        
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            background: #f2f2f7;
+            border-radius: 12px;
+            font-size: 17px;
+            color: #1c1c1e;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            resize: none;
+        }
+        
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            background: #e5e5ea;
+            transform: scale(1.01);
+        }
+        
+        .input-group input::placeholder,
+        .input-group textarea::placeholder {
+            color: #8e8e93;
+        }
+        
+        .input-counter {
+            font-size: 13px;
+            color: #8e8e93;
+            margin-top: 8px;
+            text-align: right;
+            font-family: 'SF Mono', 'Monaco', monospace;
+        }
+        
+        .input-counter.over-limit {
+            color: #ff3b30;
+            font-weight: 600;
+        }
+        
+        /* 検索クエリプレビューセクションのスタイル */
+        .query-preview-section {
+            margin-top: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .query-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .query-section-header:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        
+        .query-section-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #8e8e93;
+        }
+        
+        .expand-icon {
+            font-size: 12px;
+            color: #8e8e93;
+            transition: transform 0.3s ease;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        .expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .query-preview {
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        .query-preview.expanded {
+            display: block;
+        }
+        
+        .query-display {
+            background: #f2f2f7;
+            padding: 16px;
+            border-radius: 12px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 14px;
+            color: #1c1c1e;
+            word-break: break-all;
+            line-height: 1.4;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .query-display.empty {
+            color: #8e8e93;
+            font-style: italic;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 12px;
+            letter-spacing: -0.2px;
+        }
+        
+        .button:active {
+            transform: scale(0.98);
+            background: #0056b3;
+        }
+        
+        .button.secondary {
+            background: #8e8e93;
+        }
+        
+        .button.secondary:active {
+            background: #6d6d70;
+        }
+        
+        .button.destructive {
+            background: #ff3b30;
+        }
+        
+        .button.destructive:active {
+            background: #d70015;
+        }
+        
+        .result-section {
+            display: none;
+            position: relative;
+        }
+        
+        .close-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(142, 142, 147, 0.12);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
+            cursor: pointer;
+            color: #8e8e93;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
-
-        .add-button:hover {
-            background-color: #0056CC;
-            transform: scale(1.05);
+        
+        .close-button:hover {
+            background: rgba(142, 142, 147, 0.2);
+            color: #1c1c1e;
         }
-
-        .add-button:active {
+        
+        .close-button:active {
             transform: scale(0.95);
+            background: rgba(142, 142, 147, 0.3);
         }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .add-form {
-            background-color: var(--surface-color);
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 0.5px solid var(--border-color);
-            overflow: hidden;
-            max-height: 0;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: max-height 0.3s ease, opacity 0.3s ease, transform 0.3s ease, margin 0.3s ease;
-        }
-
-        .add-form.expanded {
-            max-height: 500px;
-            opacity: 1;
-            transform: translateY(0);
-            margin-bottom: 20px;
-        }
-
-        .form-content {
-            padding: 20px;
-        }
-
-        .form-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 20px;
+        
+        .qr-container {
             text-align: center;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 16px;
-            background-color: var(--surface-color);
-            color: var(--text-primary);
-            transition: border-color 0.2s;
-        }
-
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 16px;
-            background-color: var(--surface-color);
-            color: var(--text-primary);
-            transition: border-color 0.2s;
-            resize: vertical;
-            min-height: 80px;
-            font-family: inherit;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        .char-count {
-            text-align: right;
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        .btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .btn:hover {
-            opacity: 0.8;
-        }
-
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background-color: var(--text-secondary);
-        }
-
-        .btn-destructive {
-            background-color: var(--destructive-color);
-        }
-
-        .form-actions {
+            padding: 24px;
+            background: #f2f2f7;
+            border-radius: 16px;
+            margin: 20px 0;
             display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-        }
-
-        .btn-cancel {
-            background-color: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-        }
-
-        .bookmarks-list {
-            background-color: var(--surface-color);
-            border-radius: 10px;
-            border: 0.5px solid var(--border-color);
-            overflow: hidden;
-        }
-
-        .bookmark-item {
-            padding: 16px 20px;
-            border-bottom: 0.5px solid var(--border-color);
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .bookmark-item:last-child {
-            border-bottom: none;
-        }
-
-        .bookmark-item:hover {
-            background-color: rgba(0, 122, 255, 0.05);
-        }
-
-        .bookmark-item.focused {
-            background-color: rgba(0, 122, 255, 0.1);
-        }
-
-        .bookmark-content {
-            width: 100%;
-        }
-
-        .bookmark-header {
-            display: flex;
+            justify-content: center;
             align-items: center;
+        }
+        
+        /* QRコードサイズ調整 */
+        .qr-container img {
+            max-width: 200px;
+            max-height: 200px;
+            width: auto;
+            height: auto;
+        }
+        
+        .share-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-bottom: 8px;
+            margin-top: 20px;
         }
-
-        .bookmark-code {
+        
+        .chip {
             display: inline-block;
-            background-color: #8E8E93;
-            color: white;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 6px;
-            letter-spacing: 2px;
-            flex-shrink: 0;
-        }
-
-        .bookmark-title {
-            font-weight: 600;
-            font-size: 16px;
-            color: var(--text-primary);
-            flex: 1;
-            min-width: 0;
-            line-height: 1.4;
-            word-wrap: break-word;
-            cursor: default;
-        }
-
-        .bookmark-comment {
-            color: var(--text-secondary);
+            padding: 6px 12px;
+            background: rgba(0, 122, 255, 0.1);
+            color: #007aff;
+            border-radius: 12px;
             font-size: 14px;
-            line-height: 1.4;
-            margin-bottom: 8px;
+            font-weight: 500;
+            margin: 4px;
         }
-
-        .bookmark-details {
-            opacity: 0;
-            max-height: 0;
-            overflow: hidden;
-            transition: opacity 0.3s ease, max-height 0.3s ease;
-        }
-
-        .bookmark-item.focused .bookmark-details {
-            opacity: 1;
-            max-height: 100px;
-        }
-
-        .bookmark-url {
-            color: var(--text-secondary);
-            font-size: 14px;
+        
+        .url-display {
+            background: #f2f2f7;
+            padding: 16px;
+            border-radius: 12px;
             word-break: break-all;
+            font-size: 13px;
+            color: #8e8e93;
+            margin: 16px 0;
+            font-family: 'SF Mono', 'Monaco', monospace;
+        }
+        
+        .saved-sets {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .saved-sets h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1c1c1e;
+            margin-bottom: 20px;
+            letter-spacing: -0.4px;
+        }
+        
+        .set-item {
+            padding: 16px;
+            margin: 12px 0;
+            background: #f2f2f7;
+            border-radius: 16px;
+        }
+        
+        .set-info h4 {
+            margin-bottom: 8px;
+            color: #1c1c1e;
+            font-size: 17px;
+            font-weight: 600;
+        }
+        
+        .set-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
             margin-bottom: 12px;
         }
-
-        .bookmark-actions {
+        
+        .set-actions {
             display: flex;
-            flex-direction: row;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
-            gap: 16px;
         }
-
-        .bookmark-actions-right {
+        
+        .set-actions-left {
             display: flex;
             gap: 8px;
         }
-
-        .bookmark-actions .btn {
-            flex-shrink: 0;
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 14px;
-            min-width: auto;
-            white-space: nowrap;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-
-        .empty-state h3 {
-            font-size: 20px;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-
-        /* ヘルプダイアログ */
-        .help-dialog {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .help-dialog.show {
+        
+        .set-actions-right {
             display: flex;
+            gap: 8px;
         }
-
-        .help-content {
-            background-color: var(--surface-color);
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-            animation: dialogSlideIn 0.3s ease;
-        }
-
-        .help-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .help-header h3 {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .close-button {
-            background: none;
+        
+        .mini-button {
+            background: #007aff;
+            color: white;
             border: none;
-            font-size: 24px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-            transition: background-color 0.2s;
-        }
-
-        .close-button:hover {
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .help-section {
-            margin-bottom: 20px;
-        }
-
-        .help-section h4 {
-            font-size: 16px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-
-        .help-section p {
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 8px;
+        
+        .mini-button:active {
+            transform: scale(0.95);
+            background: #0056b3;
         }
-
-        .help-section ul {
-            color: var(--text-secondary);
-            line-height: 1.6;
-            padding-left: 20px;
+        
+        .mini-button.delete {
+            background: #ff3b30;
         }
-
-        .help-section li {
-            margin-bottom: 4px;
+        
+        .mini-button.delete:active {
+            background: #d70015;
         }
-
-        .code-example {
-            background-color: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 14px;
-            margin: 8px 0;
+        
+        .status-indicator {
+            position: fixed;
+            top: max(env(safe-area-inset-top), 44px);
+            top: calc(max(env(safe-area-inset-top), 44px) + 16px);
+            right: 16px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+            z-index: 1000;
+            max-width: 280px;
         }
-
-        @keyframes dialogSlideIn {
-            from {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+        
+        .offline-indicator {
+            background: rgba(255, 59, 48, 0.9);
         }
-
-        @media (max-width: 768px) {
-            .header {
-                padding: 12px 16px 16px 16px;
-                --header-height: 120px;
-            }
-
-            .header-title h1 {
-                font-size: 24px;
-            }
-
-            .header-subtitle {
-                font-size: 12px;
-            }
-
-            .search-input {
-                font-size: 16px;
-                min-width: 120px;
-            }
-
-            .container {
-                padding: 16px;
-            }
-
-            .bookmark-actions {
-                flex-direction: row !important;
-            }
-
-            .help-content {
-                margin: 10px;
-                padding: 20px;
-            }
+        
+        .update-indicator {
+            background: rgba(52, 199, 89, 0.9);
+            cursor: pointer;
         }
-
-        @media (max-width: 480px) {
-            .header-title {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 4px;
+        
+        /* iOS風のセクション見出し */
+        .section-header {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1c1c1e;
+            margin-bottom: 16px;
+            letter-spacing: -0.4px;
+        }
+        
+        /* iOS風のグループ化されたリスト */
+        .grouped-list {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .list-item {
+            padding: 16px 20px;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.2s ease;
+        }
+        
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        
+        .list-item:active {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        
+        /* ダークモード対応 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #000000;
+                color: #ffffff;
             }
-
-            .header-subtitle {
-                margin-left: 0;
+            
+            .header h1 {
+                color: #ffffff;
             }
-
-            .search-input {
-                min-width: 100px;
+            
+            .header p {
+                color: #8e8e93;
+            }
+            
+            .card,
+            .saved-sets,
+            .install-prompt,
+            .grouped-list,
+            .manual-update {
+                background: rgba(28, 28, 30, 0.95);
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .input-group input,
+            .input-group textarea {
+                background: #1c1c1e;
+                color: #ffffff;
+            }
+            
+            .input-group input:focus,
+            .input-group textarea:focus {
+                background: #2c2c2e;
+            }
+            
+            .qr-container,
+            .url-display,
+            .set-item {
+                background: #1c1c1e;
+            }
+            
+            .chip {
+                background: rgba(0, 122, 255, 0.2);
+            }
+            
+            .list-item {
+                border-bottom-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .list-item:active {
+                background: rgba(255, 255, 255, 0.1);
+            }
+            
+            .close-button:hover {
+                background: rgba(255, 255, 255, 0.15);
+                color: #ffffff;
+            }
+            
+            .close-button:active {
+                background: rgba(255, 255, 255, 0.25);
+            }
+            
+            .input-counter {
+                color: #8e8e93;
+            }
+            
+            .input-counter.over-limit {
+                color: #ff453a;
+            }
+            
+            .query-display {
+                background: #1c1c1e;
+                color: #ffffff;
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .query-display.empty {
+                color: #8e8e93;
+            }
+            
+            .query-section-header:hover {
+                background: rgba(255, 255, 255, 0.1);
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-title">
-            <div>
-                <h1>TLW<span class="header-subtitle">- パーソナルブックマーク管理</span></h1>
-            </div>
-            <button class="help-button" onclick="showHelpDialog()" title="ヘルプ">
-                ❓
-            </button>
-        </div>
-        <div class="header-controls">
-            <input type="text" class="search-input" id="search" placeholder="ブックマークを検索..." oninput="filterBookmarks()">
-            <button class="add-button" onclick="toggleAddForm()" title="ブックマークを追加">
-                +
-            </button>
-        </div>
-    </div>
-
+    <div class="status-indicator" id="statusIndicator"></div>
+    
     <div class="container">
-        <div class="add-form" id="addForm">
-            <div class="form-content">
-                <h3 class="form-title">ブックマークを追加</h3>
-                <div class="form-group">
-                    <label for="url">URL</label>
-                    <input type="url" id="url" placeholder="https://example.com" required>
+        <div class="header">
+            <h1>XSA - X Search Assistant</h1>
+            <p>Xを複数キーワードで効率的に検索</p>
+            
+            <div class="install-prompt" id="installPrompt">
+                <span>📱 ホーム画面に追加しますか？</span>
+                <button onclick="installApp()">追加</button>
+                <button onclick="dismissInstall()" style="background: #6c757d; margin-left: 10px;">後で</button>
+            </div>
+            
+            <div class="manual-update" id="manualUpdate">
+                <h4>🔄 更新が必要です</h4>
+                <p>自動更新が動作しない場合は、<br>手動でキャッシュをクリアしてください</p>
+                <button onclick="forceUpdate()">強制更新</button>
+                <button onclick="hideManualUpdate()" style="background: #8e8e93;">閉じる</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="input-group">
+                <label>📝 検索セット名</label>
+                <input type="text" id="setName" placeholder="推し海外文学作家">
+            </div>
+            
+            <div class="input-group">
+                <label>🔑 検索キーワード（改行で区切る）</label>
+                <textarea id="keywords" rows="9" placeholder="ミルハウザー&#10;カルヴィーノ&#10;ピンチョン&#10;プルースト" oninput="updateCounter('keywords', 'keywordsCounter'); updateQueryPreview()"></textarea>
+                <div class="input-counter" id="keywordsCounter">0行 | 0文字</div>
+            </div>
+            
+            <div class="input-group">
+                <label>🚫 除外キーワード（改行で区切る）</label>
+                <textarea id="excludeKeywords" rows="5" placeholder="ジョセフ&#10;銀青" oninput="updateCounter('excludeKeywords', 'excludeKeywordsCounter'); updateQueryPreview()"></textarea>
+                <div class="input-counter" id="excludeKeywordsCounter">0行 | 0文字</div>
+            </div>
+            
+            <div class="query-preview-section">
+                <div class="query-section-header" onclick="toggleQuerySection()">
+                    <span class="query-section-title">検索クエリプレビュー</span>
+                    <span class="expand-icon" id="expandIcon">▼</span>
                 </div>
-                <div class="form-group">
-                    <label for="title">タイトル（任意）</label>
-                    <input type="text" id="title" placeholder="サイトのタイトル">
-                </div>
-                <div class="form-group">
-                    <label for="comment">コメント（任意）</label>
-                    <textarea id="comment" placeholder="このサイトについてのメモ..." maxlength="200" rows="3"></textarea>
-                    <div class="char-count">
-                        <span id="charCount">0</span>/200文字
+                
+                <div class="query-preview" id="queryPreview">
+                    <div class="query-display" id="queryDisplay">
+                        キーワードを入力すると、実際の検索クエリが表示されます
                     </div>
                 </div>
-                <div class="form-actions">
-                    <button class="btn btn-cancel" onclick="closeAddForm()">キャンセル</button>
-                    <button class="btn" onclick="addBookmark()">追加</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="bookmarks-list" id="bookmarksList">
-            <div class="empty-state">
-                <h3>ブックマークがありません</h3>
-                <p>右上の + ボタンからブックマークを追加してください</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- ヘルプダイアログ -->
-    <div class="help-dialog" id="helpDialog">
-        <div class="help-content">
-            <div class="help-header">
-                <h3>TLW の使い方</h3>
-                <button class="close-button" onclick="closeHelpDialog()">×</button>
             </div>
             
-            <div class="help-section">
-                <p>TLWは、ウェブサイトのブックマークを効率的に管理するアプリです。ブラウザの標準ブックマーク機能とは独立して動作します。</p>
-                <p><strong>TLW</strong>は「Three-Letter Words」の略で、各ブックマークに付与される3文字のアルファベットコードに由来しています。</p>
+            <button class="button" onclick="testSearch()">Xで検索</button>
+            <button class="button" onclick="saveToLocal()">検索セットを保存</button>
+            <button class="button" onclick="generateShare()">共有リンクを生成</button>
+        </div>
+        
+        <div class="card result-section" id="resultSection">
+            <button class="close-button" onclick="closeResultSection()" title="閉じる">×</button>
+            <h3 class="section-header">✨ 共有する</h3>
+            
+            <div class="qr-container">
+                <div id="qrcode"></div>
             </div>
             
-            <div class="help-section">
-                <h4>🔖 ブックマーク追加・共有機能</h4>
-                <p>右上の + ボタンを押してフォームを開き、URLとタイトル、コメントを入力して保存できます。</p>
-                <p>また、このアプリをホーム画面に追加（PWAとしてインストール）した後は、他のアプリから「共有」を使ってTLWを選択すると、URLが自動で入力された状態でフォームが開きます。<br>
-                <small>※共有機能は現在Android端末でのみ利用可能です。iOS等では対応していません。</small></p>
-            </div>
-
-            <div class="help-section">
-                <h4>🏷️ 3文字コード</h4>
-                <p>各ブックマークには自動で3文字のアルファベットコード（子音のみ）が生成されます。これにより素早く識別できるほか、紙の手帳などアナログなメモツールに書き写すときにも便利です。</p>
-                <div class="code-example">例: DTR, XYZ, RST</div>
-            </div>
-
-            <div class="help-section">
-                <h4>🔍 検索機能</h4>
-                <p>上部の検索欄で以下の項目から検索できます：</p>
-                <ul>
-                    <li>タイトル</li>
-                    <li>URL</li>
-                    <li>3文字コード</li>
-                    <li>コメント</li>
-                </ul>
-            </div>
-
-            <div class="help-section">
-                <h4>📋 ブックマーク項目の操作</h4>
-                <p>保存されたブックマーク項目をタップすると詳細が表示されます。各要素で以下の操作が可能です：</p>
-                <ul>
-                    <li><strong>長押し</strong>: タイトル、コメント、URL、3文字コードをクリップボードにコピー</li>
-                    <li><strong>コメント編集ボタン</strong>: コメントの追加・編集</li>
-                    <li><strong>開くボタン</strong>: ブックマークを新しいタブで開く</li>
-                    <li><strong>削除ボタン</strong>: ブックマークを完全削除</li>
-                </ul>
-            </div>
-
-            <div class="help-section">
-                <h4>💾 データ保存</h4>
-                <p>全てのブックマークはお使いのデバイスのブラウザに保存されます。データは外部に送信されません。</p>
+            <div class="url-display" id="urlDisplay"></div>
+            
+            <div class="share-buttons">
+                <button class="button" onclick="shareX()">Xでシェア</button>
+                <button class="button secondary" onclick="copyURL()">URLコピー</button>
             </div>
         </div>
+        
+        <div class="saved-sets" id="savedSets" style="display: none;">
+            <h3 class="section-header">📚 保存した検索セット</h3>
+            <div id="setsList"></div>
+        </div>
     </div>
-
+    
     <script>
-        // 母音を除いた21文字のアルファベット
-        const CONSONANTS = 'BCDFGHJKLMNPQRSTVWXYZ'.split('');
+        let currentURL = '';
+        let deferredPrompt;
+        let updateAvailable = false;
+        let queryExpanded = false;
         
-        // 不適切な3文字の組み合わせを除外するリスト
-        const INAPPROPRIATE_CODES = new Set([
-            'FCK', 'DCK', 'PNS', 'PSY', 'FGT', 'NGR', 'CNT', 'KNT', 'SHT', 'DSH', 
-            'TWT', 'BCH', 'CLT', 'KLT', 'SCK', 'LCK', 'JZZ', 'VGN', 'SJV', 'PRN', 
-            'GVR', 'PSS', 'SNM', 'SLT', 'KYK', 'KYC', 'KYQ', 'DYK', 'DYQ', 'DYC', 
-            'KKK', 'JYZ', 'PRK', 'PRC', 'PRQ', 'MYC', 'MYK', 'MYQ', 'GZZ', 'SXX', 
-            'SXY', 'XXX', 'WCK', 'THC', 'VJN', 'STD', 'LSD', 'PCP', 'DMN', 'MFF', 
-            'PHK', 'PHC', 'PHQ', 'XTC', 'MLF', 'RCK', 'PMS', 'NDZ', 'NDS', 'WTF', 
-            'CPD', 'DQN', 'NTR', 'HSP',
-            'SEX', 'GAY', 'ASS', 'TIT', 'CUM', 'FAG', 'DIC', 'COK', 'COC', 'PIZ', 
-            'VAG', 'VJJ', 'BLJ', 'FLK', 'SUK', 'BJS', 'HNJ', 'ANL', 'ORG', 'CLM', 
-            'WOR', 'SLV', 'MST', 'JRK', 'STR', 'HOR', 'WHO', 'BIT', 'DAM', 'HEL', 
-            'GOD', 'JES', 'CHR', 'ISL', 'JEW', 'MUS', 'BUD', 'HIN', 'SIK', 'ATH',
-            'GUN', 'KIL', 'DIE', 'WAR', 'HIT', 'CUT', 'STB', 'SHO', 'BOB', 'TNT',
-            'ICE', 'POT', 'WED', 'JNT', 'HGH', 'COK', 'CRC', 'MDM', 'GHB', 'KET',
-            'HIV', 'AIDS', 'STI', 'HPV', 'HSV', 'HEP', 'SYP', 'GON', 'CHL', 'CRB',
-            'FAT', 'UGL', 'STU', 'DUM', 'LOZ', 'SUX', 'GAG', 'PUK', 'VOM', 'URN'
-        ]);
+        // Service Worker登録（相対パス使用）
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('./sw.js');
+                    console.log('SW registered: ', registration);
+                    
+                    // iOS用デバッグ情報
+                    console.log('PWA Debug Info:', {
+                        userAgent: navigator.userAgent,
+                        standalone: window.navigator.standalone,
+                        serviceWorkerSupported: 'serviceWorker' in navigator,
+                        currentLocation: window.location.href,
+                        manifestLoaded: document.querySelector('link[rel="manifest"]') !== null
+                    });
+                    
+                    // アップデート確認
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showUpdateAvailable();
+                            }
+                        });
+                    });
+                } catch (registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                }
+            });
+        } else {
+            console.log('Service Worker not supported');
+        }
         
-        let bookmarks = JSON.parse(localStorage.getItem('tlw-bookmarks') || '[]');
-        let formVisible = false;
-
-        // 3文字のランダムコードを生成
-        function generateCode() {
-            let code;
-            let attempts = 0;
-            const maxAttempts = 10000;
-
-            const recentCodes = new Set(
-                bookmarks.slice(0, 500).map(b => b.code)
-            );
-
-            do {
-                code = '';
-                for (let i = 0; i < 3; i++) {
-                    code += CONSONANTS[Math.floor(Math.random() * CONSONANTS.length)];
-                }
-                attempts++;
-                
-                if (attempts > maxAttempts) {
-                    console.warn('適切なコードの生成に時間がかかっています。古いブックマークとの重複を許可します。');
-                    
-                    let fallbackAttempts = 0;
-                    const maxFallbackAttempts = 1000;
-                    
-                    do {
-                        code = '';
-                        for (let i = 0; i < 3; i++) {
-                            code += CONSONANTS[Math.floor(Math.random() * CONSONANTS.length)];
-                        }
-                        fallbackAttempts++;
-                    } while (
-                        (INAPPROPRIATE_CODES.has(code) || isInappropriatePattern(code)) &&
-                        fallbackAttempts < maxFallbackAttempts
-                    );
-                    
-                    break;
-                }
-                
-            } while (
-                recentCodes.has(code) ||
-                INAPPROPRIATE_CODES.has(code) ||
-                isInappropriatePattern(code)
-            );
-
-            return code;
-        }
-
-        function isInappropriatePattern(code) {
-            if (code[0] === code[1] && code[1] === code[2]) {
-                return true;
-            }
+        // 検索クエリセクションの展開/折りたたみ
+        function toggleQuerySection() {
+            const queryPreview = document.getElementById('queryPreview');
+            const expandIcon = document.getElementById('expandIcon');
             
-            const patterns = [
-                /^.SS$/, /^S.S$/, /^SS.$/, /^.XX$/, /^X.X$/, /^XX.$/, /^.ZZ$/, /^Z.Z$/,
-            ];
+            queryExpanded = !queryExpanded;
             
-            return patterns.some(pattern => pattern.test(code));
-        }
-
-        async function fetchTitle(url) {
-            try {
-                const domain = new URL(url).hostname.replace('www.', '');
-                return domain;
-            } catch (error) {
-                return 'Unknown Site';
-            }
-        }
-
-        function updateCharCount() {
-            const commentInput = document.getElementById('comment');
-            const charCount = document.getElementById('charCount');
-            charCount.textContent = commentInput.value.length;
-        }
-
-        function toggleAddForm() {
-            const addForm = document.getElementById('addForm');
-            const addButton = document.querySelector('.add-button');
-            
-            if (formVisible) {
-                closeAddForm();
+            if (queryExpanded) {
+                queryPreview.classList.add('expanded');
+                expandIcon.classList.add('expanded');
             } else {
-                // フォームを表示
-                addForm.classList.add('expanded');
-                addButton.innerHTML = '×';
-                addButton.style.transform = 'rotate(45deg)';
-                formVisible = true;
-                
-                // URLフィールドにフォーカス
-                setTimeout(() => {
-                    document.getElementById('url').focus();
-                }, 300);
-                
-                // 他のブックマーク項目を閉じる
-                closeAllBookmarkItems();
+                queryPreview.classList.remove('expanded');
+                expandIcon.classList.remove('expanded');
             }
         }
-
-        function closeAddForm() {
-            const addForm = document.getElementById('addForm');
-            const addButton = document.querySelector('.add-button');
+        
+        // 検索クエリプレビューの更新
+        function updateQueryPreview() {
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k.trim());
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k.trim());
+            const queryDisplay = document.getElementById('queryDisplay');
             
-            addForm.classList.remove('expanded');
-            addButton.innerHTML = '+';
-            addButton.style.transform = 'rotate(0deg)';
-            formVisible = false;
+            if (keywords.length === 0) {
+                queryDisplay.textContent = 'キーワードを入力すると、実際の検索クエリが表示されます';
+                queryDisplay.className = 'query-display empty';
+                return;
+            }
             
-            // フォームをクリア
-            document.getElementById('url').value = '';
-            document.getElementById('title').value = '';
-            document.getElementById('comment').value = '';
-            updateCharCount();
+            // 検索クエリを生成
+            const includeQuery = keywords.map(k => `"${k.trim()}"`).join(' OR ');
+            const excludeQuery = excludeKeywords.length > 0 
+                ? ' ' + excludeKeywords.map(k => `-"${k.trim()}"`).join(' ')
+                : '';
+            
+            const fullQuery = includeQuery + excludeQuery;
+            
+            queryDisplay.textContent = fullQuery;
+            queryDisplay.className = 'query-display';
         }
-
-        async function addBookmark() {
-            const urlInput = document.getElementById('url');
-            const titleInput = document.getElementById('title');
-            const commentInput = document.getElementById('comment');
+        
+        // インストールプロンプト
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
             
-            const url = urlInput.value.trim();
-            if (!url) {
-                alert('URLを入力してください');
+            // インストール済みかチェック
+            if (window.matchMedia('(display-mode: standalone)').matches) {
                 return;
             }
-
-            try {
-                new URL(url);
-            } catch (error) {
-                alert('有効なURLを入力してください');
-                return;
-            }
-
-            const title = titleInput.value.trim() || await fetchTitle(url);
-            const comment = commentInput.value.trim();
-            const code = generateCode();
             
-            const bookmark = {
-                id: Date.now(),
-                url: url,
-                title: title,
-                comment: comment,
-                code: code,
-                createdAt: new Date().toISOString(),
-                createdDate: new Date().toDateString()
+            document.getElementById('installPrompt').style.display = 'flex';
+        });
+        
+        // PWAインストール後
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            document.getElementById('installPrompt').style.display = 'none';
+        });
+        
+        // オフライン/オンライン状態監視
+        window.addEventListener('online', () => {
+            hideStatus();
+        });
+        
+        window.addEventListener('offline', () => {
+            showStatus('📡 オフラインモード', 'offline-indicator');
+        });
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').style.display = 'none';
+                });
+            }
+        }
+        
+        function dismissInstall() {
+            document.getElementById('installPrompt').style.display = 'none';
+            localStorage.setItem('installDismissed', Date.now());
+        }
+        
+        function showUpdateAvailable() {
+            updateAvailable = true;
+            showStatus('🔄 更新版が利用可能です（クリックで更新）', 'update-indicator');
+            
+            document.getElementById('statusIndicator').onclick = () => {
+                // ボタンを押した時の視覚的フィードバック
+                showStatus('⏳ 更新中...', 'update-indicator');
+                
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistration().then(reg => {
+                        if (reg && reg.waiting) {
+                            // 新しいService Workerに切り替え
+                            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                            
+                            // 少し待ってからリロード
+                            setTimeout(() => {
+                                window.location.reload(true);
+                            }, 500);
+                        } else {
+                            // waiting状態でない場合は強制リロード
+                            console.log('No waiting service worker, force reload');
+                            setTimeout(() => {
+                                window.location.reload(true);
+                            }, 500);
+                        }
+                    }).catch(error => {
+                        console.error('Service Worker update failed:', error);
+                        // エラー時は手動更新UIを表示
+                        document.getElementById('manualUpdate').style.display = 'block';
+                        hideStatus();
+                    });
+                } else {
+                    // Service Worker未対応の場合は通常のリロード
+                    setTimeout(() => {
+                        window.location.reload(true);
+                    }, 500);
+                }
             };
-
-            bookmarks.unshift(bookmark);
-            localStorage.setItem('tlw-bookmarks', JSON.stringify(bookmarks));
-            
-            closeAddForm();
-            renderBookmarks();
-            showToast('ブックマークを追加しました');
         }
-
-        function deleteBookmark(id) {
-            if (confirm('このブックマークを削除しますか？')) {
-                bookmarks = bookmarks.filter(b => b.id !== id);
-                localStorage.setItem('tlw-bookmarks', JSON.stringify(bookmarks));
-                renderBookmarks();
-                showToast('ブックマークを削除しました');
+        
+        function forceUpdate() {
+            showStatus('🔄 強制更新中...', 'update-indicator');
+            
+            // Service Worker を完全にクリア
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                }).finally(() => {
+                    // キャッシュも削除
+                    if ('caches' in window) {
+                        caches.keys().then(names => {
+                            return Promise.all(names.map(name => caches.delete(name)));
+                        }).finally(() => {
+                            // 完全リロード
+                            window.location.reload(true);
+                        });
+                    } else {
+                        window.location.reload(true);
+                    }
+                });
+            } else {
+                // ページを強制リロード
+                window.location.href = window.location.href + '?t=' + Date.now();
             }
         }
-
-        function closeAllBookmarkItems() {
-            document.querySelectorAll('.bookmark-item').forEach(item => {
-                item.classList.remove('focused');
-            });
+        
+        function hideManualUpdate() {
+            document.getElementById('manualUpdate').style.display = 'none';
         }
-
-        function toggleBookmarkFocus(id) {
-            const clickedItem = event.target.closest('.bookmark-item');
-            if (!clickedItem) return;
+        
+        function updateCounter(textareaId, counterId) {
+            const textarea = document.getElementById(textareaId);
+            const counter = document.getElementById(counterId);
+            const text = textarea.value;
             
-            // 既に展開されている項目かチェック
-            const isAlreadyFocused = clickedItem.classList.contains('focused');
+            // 文字数カウント（改行文字を除外）
+            const charCount = text.replace(/\n/g, '').length;
             
-            // 全ての項目からfocusedクラスを削除
-            document.querySelectorAll('.bookmark-item').forEach(item => {
-                item.classList.remove('focused');
-            });
+            // 行数カウント（空文字の場合は0行、それ以外は改行数+1）
+            const lineCount = text === '' ? 0 : text.split('\n').length;
             
-            // クリックされた項目が既に展開されていなかった場合のみ展開
-            if (!isAlreadyFocused) {
-                clickedItem.classList.add('focused');
+            // 非空行数もカウント（参考情報として）
+            const nonEmptyLines = text === '' ? 0 : text.split('\n').filter(line => line.trim() !== '').length;
+            
+            // カウンター表示更新
+            counter.textContent = `${lineCount}行 | ${charCount}文字`;
+            
+            // 制限超過時の警告表示（任意：長すぎる場合）
+            if (charCount > 1000 || lineCount > 50) {
+                counter.className = 'input-counter over-limit';
+            } else {
+                counter.className = 'input-counter';
+            }
+            
+            // 非空行数が多い場合の追加情報
+            if (lineCount > 0 && nonEmptyLines !== lineCount) {
+                counter.textContent += ` (有効: ${nonEmptyLines}行)`;
             }
         }
-
-        function openBookmark(url) {
-            window.open(url, '_blank');
+        
+        function showStatus(message, className = '') {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.textContent = message;
+            indicator.className = `status-indicator ${className}`;
+            indicator.style.display = 'block';
         }
-
-        function renderBookmarks(filteredBookmarks = null) {
-            const container = document.getElementById('bookmarksList');
-            const bookmarksToShow = filteredBookmarks || bookmarks;
-
-            if (bookmarksToShow.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <h3>${filteredBookmarks ? '検索結果がありません' : 'ブックマークがありません'}</h3>
-                        <p>${filteredBookmarks ? '別のキーワードで検索してみてください' : '右上の + ボタンからブックマークを追加してください'}</p>
-                        ${!filteredBookmarks ? '<p>他のアプリからも共有できます（アプリをインストール後、Android端末のみ）</p>' : ''}
-                    </div>
-                `;
+        
+        function hideStatus() {
+            document.getElementById('statusIndicator').style.display = 'none';
+        }
+        
+        function testSearch() {
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k);
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k);
+            
+            if (keywords.length === 0) {
+                alert('キーワードを入力してください');
                 return;
             }
-
-            container.innerHTML = bookmarksToShow.map(bookmark => `
-                <div class="bookmark-item" onclick="toggleBookmarkFocus(${bookmark.id})">
-                    <div class="bookmark-content">
-                        <div class="bookmark-header">
-                            <span class="bookmark-code" data-copy="${bookmark.code}" data-label="コード">${bookmark.code}</span>
-                            <div class="bookmark-title" data-copy="${bookmark.title}" data-label="タイトル">${bookmark.title}</div>
+            
+            const includeQuery = keywords.map(k => `"${encodeURIComponent(k.trim())}"`).join('+OR+');
+            const excludeQuery = excludeKeywords.map(k => `-"${encodeURIComponent(k.trim())}"`).join('+');
+            const query = excludeQuery ? `${includeQuery}+${excludeQuery}` : includeQuery;
+            
+            window.open(`https://x.com/search?q=${query}&src=typd&f=tweets&vertical=default`, '_blank');
+        }
+        
+        function saveToLocal() {
+            const name = document.getElementById('setName').value || '名称未設定';
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k);
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k);
+            
+            if (keywords.length === 0) {
+                alert('キーワードを入力してください');
+                return;
+            }
+            
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            const newSet = {
+                id: Date.now(),
+                name: name,
+                keywords: keywords,
+                excludeKeywords: excludeKeywords,
+                createdAt: new Date().toLocaleDateString()
+            };
+            
+            sets.unshift(newSet);
+            localStorage.setItem('xsaSearchSets', JSON.stringify(sets));
+            
+            alert('保存しました！');
+            loadSavedSets();
+        }
+        
+        function loadSavedSets() {
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            
+            if (sets.length === 0) {
+                document.getElementById('savedSets').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('savedSets').style.display = 'block';
+            
+            const html = sets.map(set => `
+                <div class="set-item">
+                    <div class="set-info">
+                        <h4>${set.name}</h4>
+                        <div class="set-keywords">
+                            ${set.keywords.slice(0, 6).map(k => `<span class="chip">${k}</span>`).join('')}
+                            ${set.keywords.length > 6 ? `<span class="chip">+${set.keywords.length - 6}</span>` : ''}
                         </div>
-                        ${bookmark.comment ? `<div class="bookmark-comment" data-copy="${bookmark.comment}" data-label="コメント">"${bookmark.comment}"</div>` : ''}
-                        <div class="bookmark-details">
-                            <div class="bookmark-url" data-copy="${bookmark.url}" data-label="URL">${bookmark.url}</div>
-                            <div class="bookmark-actions">
-                                <button class="btn btn-destructive btn-small" onclick="event.stopPropagation(); deleteBookmark(${bookmark.id})">
-                                    削除
-                                </button>
-                                <div class="bookmark-actions-right">
-                                    <button class="btn btn-small" onclick="event.stopPropagation(); editBookmark(${bookmark.id})">
-                                        コメント編集
-                                    </button>
-                                    <button class="btn btn-small" onclick="event.stopPropagation(); openBookmark('${bookmark.url}')">
-                                        開く
-                                    </button>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="set-actions">
+                        <div class="set-actions-left">
+                            <button class="mini-button delete" onclick="deleteSet(${set.id})">削除</button>
+                        </div>
+                        <div class="set-actions-right">
+                            <button class="mini-button" onclick="loadSet(${set.id})">読込</button>
+                            <button class="mini-button" onclick="searchWithSet(${set.id})">検索</button>
                         </div>
                     </div>
                 </div>
             `).join('');
-
-            // 長押しでコピー機能を追加
-            document.querySelectorAll('[data-copy]').forEach(element => {
-                const text = element.getAttribute('data-copy');
-                const label = element.getAttribute('data-label');
-                addLongPressListener(element, text, label);
-            });
+            
+            document.getElementById('setsList').innerHTML = html;
         }
-
-        function filterBookmarks() {
-            const searchTerm = document.getElementById('search').value.toLowerCase();
-            if (!searchTerm) {
-                renderBookmarks();
+        
+        function loadSet(id) {
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            const set = sets.find(s => s.id === id);
+            
+            if (!set) {
+                alert('読み込み対象の検索セットが見つかりません。');
                 return;
             }
-
-            const filtered = bookmarks.filter(bookmark => 
-                bookmark.title.toLowerCase().includes(searchTerm) ||
-                bookmark.url.toLowerCase().includes(searchTerm) ||
-                bookmark.code.toLowerCase().includes(searchTerm) ||
-                (bookmark.comment && bookmark.comment.toLowerCase().includes(searchTerm))
-            );
-
-            renderBookmarks(filtered);
-        }
-
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed;
-                top: calc(var(--header-height) + 20px);
-                left: 50%;
-                transform: translateX(-50%);
-                background: var(--success-color);
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                z-index: 1000;
-                font-weight: 600;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                animation: toastSlide 0.3s ease;
-            `;
-            toast.textContent = message;
             
-            if (!document.getElementById('toast-style')) {
-                const style = document.createElement('style');
-                style.id = 'toast-style';
-                style.textContent = `
-                    @keyframes toastSlide {
-                        from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-                        to { transform: translateX(-50%) translateY(0); opacity: 1; }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
+            // 現在の入力内容をチェック
+            const currentSetName = document.getElementById('setName').value.trim();
+            const currentKeywords = document.getElementById('keywords').value.trim();
+            const currentExcludeKeywords = document.getElementById('excludeKeywords').value.trim();
             
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.style.animation = 'toastSlide 0.3s ease reverse';
-                setTimeout(() => toast.remove(), 300);
-            }, 2500);
-        }
-
-        // ヘルプダイアログ関数
-        function showHelpDialog() {
-            document.getElementById('helpDialog').classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeHelpDialog() {
-            document.getElementById('helpDialog').classList.remove('show');
-            document.body.style.overflow = '';
-        }
-
-        // URL共有パラメータの処理
-        function handleSharedData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const sharedUrl = urlParams.get('url');
-            const sharedTitle = urlParams.get('title');
-            const sharedText = urlParams.get('text');
-            
-            let urlInput, titleInput;
-            
-            urlInput = document.getElementById('url');
-            titleInput = document.getElementById('title');
-            
-            if (!urlInput) urlInput = document.querySelector('input[id="url"]');
-            if (!titleInput) titleInput = document.querySelector('input[id="title"]');
-            
-            if (!urlInput) urlInput = document.querySelectorAll('input[type="url"]')[0];
-            if (!titleInput) titleInput = document.querySelectorAll('input[type="text"]')[0];
-            
-            if (sharedUrl || sharedTitle || sharedText) {
-                if (urlInput && titleInput) {
-                    try {
-                        if (document.activeElement) {
-                            document.activeElement.blur();
-                        }
-                        
-                        if (sharedUrl) {
-                            urlInput.value = sharedUrl;
-                            urlInput.dispatchEvent(new Event('input', { bubbles: true }));
-                            urlInput.dispatchEvent(new Event('change', { bubbles: true }));
-                        }
-                        
-                        if (sharedTitle) {
-                            titleInput.value = sharedTitle;
-                            titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-                            titleInput.dispatchEvent(new Event('change', { bubbles: true }));
-                        } else if (sharedText) {
-                            titleInput.value = sharedText;
-                            titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-                            titleInput.dispatchEvent(new Event('change', { bubbles: true }));
-                        }
-                        
-                        if (!sharedUrl && sharedText) {
-                            const urlPattern = /https?:\/\/[^\s]+/g;
-                            const foundUrls = sharedText.match(urlPattern);
-                            if (foundUrls && foundUrls.length > 0) {
-                                urlInput.value = foundUrls[0];
-                                urlInput.dispatchEvent(new Event('input', { bubbles: true }));
-                                urlInput.dispatchEvent(new Event('change', { bubbles: true }));
-                                
-                                const remainingText = sharedText.replace(foundUrls[0], '').trim();
-                                if (remainingText) {
-                                    titleInput.value = remainingText;
-                                    titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-                                    titleInput.dispatchEvent(new Event('change', { bubbles: true }));
-                                }
-                            }
-                        }
-                        
-                        setTimeout(() => {
-                            if (sharedUrl && !urlInput.value) {
-                                urlInput.setAttribute('value', sharedUrl);
-                                urlInput.value = sharedUrl;
-                            }
-                            if ((sharedTitle || sharedText) && !titleInput.value) {
-                                const titleValue = sharedTitle || sharedText;
-                                titleInput.setAttribute('value', titleValue);
-                                titleInput.value = titleValue;
-                            }
-                        }, 500);
-                        
-                        setTimeout(() => {
-                            if (urlInput.value) {
-                                toggleAddForm();
-                                urlInput.focus();
-                                urlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                        }, 200);
-                        
-                    } catch (error) {
-                        console.error('Error setting form values:', error);
-                    }
-                    
-                    const newUrl = window.location.pathname;
-                    window.history.replaceState({}, document.title, newUrl);
-                    
-                    showToast('共有されたサイトを受信しました！');
+            // いずれかのフィールドに内容がある場合は警告を表示
+            if (currentSetName || currentKeywords || currentExcludeKeywords) {
+                const confirmMessage = `作成中の検索セットが上書きされます。\n\n現在の内容:\n検索セット名: ${currentSetName || '(未入力)'}\n検索キーワード: ${currentKeywords ? currentKeywords.split('\n').length + '個のキーワード' : '(未入力)'}\n除外キーワード: ${currentExcludeKeywords ? currentExcludeKeywords.split('\n').length + '個のキーワード' : '(未入力)'}\n\n先に現在の内容を保存しますか？`;
+                
+                const result = confirm(confirmMessage);
+                
+                if (result) {
+                    // 保存処理を実行
+                    saveToLocal();
+                    // 保存が完了してから読み込みを実行
+                    setTimeout(() => {
+                        loadSetContent(set);
+                    }, 500);
+                    return;
+                }
+                
+                // 「いいえ」を選んだ場合は上書き確認
+                const overwriteConfirm = confirm('現在の内容を破棄して読み込みますか？');
+                if (!overwriteConfirm) {
+                    return; // キャンセル
                 }
             }
-        }
-
-        // PWA Service Worker 登録と自動更新
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then((registration) => {
-                        console.log('SW registered: ', registration);
-                        
-                        registration.addEventListener('updatefound', () => {
-                            const newWorker = registration.installing;
-                            console.log('New SW installing...');
-                            
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed') {
-                                    if (navigator.serviceWorker.controller) {
-                                        showUpdateAvailable();
-                                    }
-                                }
-                            });
-                        });
-                        
-                        setInterval(() => {
-                            registration.update();
-                        }, 300000);
-                    })
-                    .catch((registrationError) => {
-                        console.log('SW registration failed: ', registrationError);
-                    });
-            });
-        }
-
-        function showUpdateAvailable() {
-            const updateBanner = document.createElement('div');
-            updateBanner.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                background: var(--primary-color);
-                color: white;
-                padding: 12px 20px;
-                text-align: center;
-                z-index: 1001;
-                font-weight: 600;
-                cursor: pointer;
-                animation: slideDown 0.3s ease;
-            `;
-            updateBanner.innerHTML = `📱 新しいバージョンが利用可能です。タップして更新`;
             
-            updateBanner.onclick = () => {
-                window.location.reload();
+            // 読み込み実行
+            loadSetContent(set);
+        }
+        
+        function loadSetContent(set) {
+            document.getElementById('setName').value = set.name;
+            document.getElementById('keywords').value = set.keywords.join('\n');
+            document.getElementById('excludeKeywords').value = set.excludeKeywords.join('\n');
+            
+            // カウンターを更新
+            updateCounter('keywords', 'keywordsCounter');
+            updateCounter('excludeKeywords', 'excludeKeywordsCounter');
+            
+            // 検索クエリプレビューを更新
+            updateQueryPreview();
+            
+            window.scrollTo(0, 0);
+            
+            // 読み込み完了のフィードバック
+            showStatus('検索セットを読み込みました', '');
+            setTimeout(() => {
+                hideStatus();
+            }, 2000);
+        }
+        
+        function searchWithSet(id) {
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            const set = sets.find(s => s.id === id);
+            
+            if (set) {
+                const includeQuery = set.keywords.map(k => `"${encodeURIComponent(k)}"`).join('+OR+');
+                const excludeQuery = set.excludeKeywords.map(k => `-"${encodeURIComponent(k)}"`).join('+');
+                const query = excludeQuery ? `${includeQuery}+${excludeQuery}` : includeQuery;
+                
+                window.open(`https://x.com/search?q=${query}&src=typd&f=tweets&vertical=default`, '_blank');
+            }
+        }
+        
+        function deleteSet(id) {
+            const sets = JSON.parse(localStorage.getItem('xsaSearchSets') || '[]');
+            const set = sets.find(s => s.id === id);
+            
+            if (!set) {
+                alert('削除対象の検索セットが見つかりません。');
+                return;
+            }
+            
+            // 確認ダイアログを表示
+            const confirmMessage = `「${set.name}」を削除してもよろしいですか？\n\n含まれるキーワード:\n${set.keywords.join(', ')}\n\nこの操作は取り消せません。`;
+            
+            if (confirm(confirmMessage)) {
+                // 削除実行
+                const updatedSets = sets.filter(s => s.id !== id);
+                localStorage.setItem('xsaSearchSets', JSON.stringify(updatedSets));
+                
+                // 成功メッセージ
+                alert('検索セットを削除しました。');
+                
+                // リストを再読み込み
+                loadSavedSets();
+            }
+        }
+        
+        function generateShare() {
+            const name = document.getElementById('setName').value || '名称未設定';
+            const keywords = document.getElementById('keywords').value.split('\n').filter(k => k);
+            const excludeKeywords = document.getElementById('excludeKeywords').value.split('\n').filter(k => k);
+            
+            if (keywords.length === 0) {
+                alert('キーワードを入力してください');
+                return;
+            }
+            
+            const data = {
+                n: name,
+                k: keywords,
+                e: excludeKeywords
             };
             
-            if (!document.getElementById('update-style')) {
-                const style = document.createElement('style');
-                style.id = 'update-style';
-                style.textContent = `
-                    @keyframes slideDown {
-                        from { transform: translateY(-100%); }
-                        to { transform: translateY(0); }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
+            const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
+            currentURL = `${location.origin}${location.pathname}?s=${compressed}`;
             
-            document.body.appendChild(updateBanner);
-            document.body.style.paddingTop = '60px';
+            // QRコード生成（サイズを調整）
+            const qr = qrcode(0, 'M');
+            qr.addData(currentURL);
+            qr.make();
+            document.getElementById('qrcode').innerHTML = qr.createImgTag(4); // セルサイズを4に変更
+            
+            // URL表示
+            document.getElementById('urlDisplay').textContent = currentURL;
+            
+            // 結果セクション表示
+            document.getElementById('resultSection').style.display = 'block';
+            
+            // 結果セクションまでスクロール
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
         }
-
-        // PWAインストール促進
-        let deferredPrompt;
         
-        window.addEventListener('beforeinstallprompt', (e) => {
-            console.log('beforeinstallprompt fired');
-            e.preventDefault();
-            deferredPrompt = e;
-            showInstallButton();
-        });
-
-        function showInstallButton() {
-            if (deferredPrompt) {
-                const installButton = document.createElement('button');
-                installButton.className = 'btn';
-                installButton.textContent = 'アプリをインストール';
-                installButton.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 1000;';
-                installButton.onclick = () => {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        console.log(choiceResult.outcome);
-                        deferredPrompt = null;
-                        installButton.remove();
-                    });
-                };
-                document.body.appendChild(installButton);
+        function shareX() {
+            const name = document.getElementById('setName').value || '検索セット';
+            const text = `「${name}」の検索セットを作りました！ #XSA`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'XSA - X Search Assistant',
+                    text: text,
+                    url: currentURL
+                }).catch((error) => {
+                    // Web Share API失敗時のフォールバック
+                    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(currentURL)}`, '_blank');
+                });
+            } else {
+                window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(currentURL)}`, '_blank');
             }
         }
-
-        // イベントリスナー
-        document.getElementById('url').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addBookmark();
-        });
-        document.getElementById('title').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addBookmark();
-        });
-        document.getElementById('comment').addEventListener('input', updateCharCount);
-        document.getElementById('comment').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && e.ctrlKey) addBookmark();
-        });
-
-        // フォーカス管理
-        document.getElementById('search').addEventListener('focus', closeAllBookmarkItems);
-        document.getElementById('url').addEventListener('focus', closeAllBookmarkItems);
-        document.getElementById('title').addEventListener('focus', closeAllBookmarkItems);
-        document.getElementById('comment').addEventListener('focus', closeAllBookmarkItems);
-
-        // ヘルプダイアログのクリック外で閉じる
-        document.getElementById('helpDialog').addEventListener('click', (e) => {
-            if (e.target.id === 'helpDialog') {
-                closeHelpDialog();
-            }
-        });
-
-        // ESCキーでダイアログを閉じる
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (document.getElementById('helpDialog').classList.contains('show')) {
-                    closeHelpDialog();
-                } else if (formVisible) {
-                    closeAddForm();
+        
+        function copyURL() {
+            navigator.clipboard.writeText(currentURL).then(() => {
+                alert('URLをコピーしました！');
+            }).catch(err => {
+                // フォールバック
+                const textArea = document.createElement('textarea');
+                textArea.value = currentURL;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('URLをコピーしました！');
+            });
+        }
+        
+        function closeResultSection() {
+            document.getElementById('resultSection').style.display = 'none';
+            // QRコードをクリア（メモリ節約のため）
+            document.getElementById('qrcode').innerHTML = '';
+            document.getElementById('urlDisplay').textContent = '';
+            currentURL = '';
+        }
+        
+        // インポート処理
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(location.search);
+            const compressed = params.get('s');
+            
+            if (compressed) {
+                try {
+                    const json = LZString.decompressFromEncodedURIComponent(compressed);
+                    const data = JSON.parse(json);
+                    
+                    if (confirm(`「${data.n}」をインポートしますか？`)) {
+                        document.getElementById('setName').value = data.n;
+                        document.getElementById('keywords').value = data.k.join('\n');
+                        document.getElementById('excludeKeywords').value = (data.e || []).join('\n');
+                        
+                        // カウンターを更新
+                        updateCounter('keywords', 'keywordsCounter');
+                        updateCounter('excludeKeywords', 'excludeKeywordsCounter');
+                        
+                        // 検索クエリプレビューを更新
+                        updateQueryPreview();
+                        
+                        history.replaceState(null, '', location.pathname);
+                        alert('インポート完了！');
+                    }
+                } catch (e) {
+                    console.error('インポートエラー:', e);
                 }
             }
-        });
-
-        // 初期化時に共有データ処理
-        window.addEventListener('DOMContentLoaded', () => {
-            handleSharedData();
             
-            setTimeout(() => {
-                handleSharedData();
-            }, 100);
+            // 保存済みセットを読み込み
+            loadSavedSets();
             
-            setTimeout(() => {
-                handleSharedData();
-            }, 500);
-        });
-        
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                handleSharedData();
-            }, 200);
-        });
-        
-        document.addEventListener('readystatechange', () => {
-            if (document.readyState === 'complete') {
-                setTimeout(() => {
-                    if (window.location.search) {
-                        handleSharedData();
-                    }
-                }, 100);
+            // カウンターを初期化
+            updateCounter('keywords', 'keywordsCounter');
+            updateCounter('excludeKeywords', 'excludeKeywordsCounter');
+            
+            // 検索クエリプレビューを初期化
+            updateQueryPreview();
+            
+            // インストールプロンプトの表示判定
+            const dismissed = localStorage.getItem('installDismissed');
+            if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) {
+                // 7日以内に却下されている場合は表示しない
+                return;
             }
         });
-
-        // 初期化
-        renderBookmarks();
     </script>
 </body>
 </html>
