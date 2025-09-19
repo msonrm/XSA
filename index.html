@@ -648,13 +648,13 @@
             
             <div class="input-group">
                 <label>🔑 検索キーワード（改行で区切る）</label>
-                <textarea id="keywords" rows="5" placeholder="ミルハウザー&#10;カルヴィーノ&#10;ピンチョン&#10;プルースト" oninput="updateCounter('keywords', 'keywordsCounter'); updateQueryPreview()"></textarea>
+                <textarea id="keywords" rows="9" placeholder="ミルハウザー&#10;カルヴィーノ&#10;ピンチョン&#10;プルースト" oninput="updateCounter('keywords', 'keywordsCounter'); updateQueryPreview()"></textarea>
                 <div class="input-counter" id="keywordsCounter">0行 | 0文字</div>
             </div>
             
             <div class="input-group">
                 <label>🚫 除外キーワード（改行で区切る）</label>
-                <textarea id="excludeKeywords" rows="3" placeholder="ジョセフ&#10;銀青" oninput="updateCounter('excludeKeywords', 'excludeKeywordsCounter'); updateQueryPreview()"></textarea>
+                <textarea id="excludeKeywords" rows="5" placeholder="ジョセフ&#10;銀青" oninput="updateCounter('excludeKeywords', 'excludeKeywordsCounter'); updateQueryPreview()"></textarea>
                 <div class="input-counter" id="excludeKeywordsCounter">0行 | 0文字</div>
             </div>
             
@@ -671,9 +671,9 @@
                 </div>
             </div>
             
-            <button class="button" onclick="testSearch()">🔍 検索してみる</button>
-            <button class="button secondary" onclick="saveToLocal()">💾 検索セットを保存</button>
-            <button class="button secondary" onclick="generateShare()">📤 共有リンクを生成</button>
+            <button class="button" onclick="testSearch()">Xで検索</button>
+            <button class="button" onclick="saveToLocal()">検索セットを保存</button>
+            <button class="button" onclick="generateShare()">共有リンクを生成</button>
         </div>
         
         <div class="card result-section" id="resultSection">
@@ -999,11 +999,11 @@
                     </div>
                     <div class="set-actions">
                         <div class="set-actions-left">
-                            <button class="mini-button delete" onclick="deleteSet(${set.id})">🗑️ 削除</button>
+                            <button class="mini-button delete" onclick="deleteSet(${set.id})">削除</button>
                         </div>
                         <div class="set-actions-right">
-                            <button class="mini-button" onclick="loadSet(${set.id})">📝 読込</button>
-                            <button class="mini-button" onclick="searchWithSet(${set.id})">🔍 検索</button>
+                            <button class="mini-button" onclick="loadSet(${set.id})">読込</button>
+                            <button class="mini-button" onclick="searchWithSet(${set.id})">検索</button>
                         </div>
                     </div>
                 </div>
@@ -1068,7 +1068,7 @@
             window.scrollTo(0, 0);
             
             // 読み込み完了のフィードバック
-            showStatus('🔄 検索セットを読み込みました', '');
+            showStatus('検索セットを読み込みました', '');
             setTimeout(() => {
                 hideStatus();
             }, 2000);
